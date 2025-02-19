@@ -26,21 +26,27 @@ runs:
             ;;
           *)
             echo "Invalid notification type" && exit 1
-          ;;
+            ;;
         esac
         echo "json_file=$json_file" >> $GITHUB_ENV
-        echo "json_file: $json_file"
       shell: bash
 
     - name: "Send Slack Notification"
       env:
         JSON_FILE: ${{ env.json_file }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_ACTOR: ${{ github.actor }}
       run: |
         if [ ! -f "$JSON_FILE" ]; then
           echo "Error: JSON file not found at $JSON_FILE"
           exit 1
         fi
 
+        # Substitui variáveis no arquivo JSON
+        envsubst < "$JSON_FILE" > "temp.json"
+
+        # Envia o arquivo substituído para o Slack
         curl -X POST -H 'Content-type: application/json' \
-        --data @"$JSON_FILE" "${{ inputs.webhook_url }}"
+        --data @"temp.json" "${{ inputs.webhook_url }}"
       shell: bash
