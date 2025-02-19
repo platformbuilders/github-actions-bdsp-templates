@@ -1,0 +1,44 @@
+{
+  "attachments": [
+    {
+      "color": "#f0f0f0",
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Início da Execução do CI/CD!  🚀"
+          },
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Repositório:*\n${{ github.repository }}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Branch:*\n${{ github.ref }}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Autor:*\n${{ github.actor }}"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Acompanhar Execução"
+              },
+              "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

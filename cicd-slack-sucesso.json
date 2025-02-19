@@ -1,0 +1,44 @@
+{
+  "attachments": [
+    {
+      "color": "#36a64f",  
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Execução Concluída com Sucesso!  ✅"
+          },
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Repositório:*\n${{ github.repository }}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Branch:*\n${{ github.ref }}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Autor:*\n${{ github.actor }}"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Acompanhar Detalhes"
+              },
+              "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
