@@ -14,7 +14,7 @@ runs:
     - name: "Determine JSON File"
       id: select-json
       run: |
-        MANIFESTS_DIR=$(basename $(dirname ${{ env.json_file }}))
+        MANIFESTS_DIR="manifests"
         case "${{ inputs.type }}" in
           start)
             json_file="${GITHUB_WORKSPACE}/${MANIFESTS_DIR}/manifests/slack-notify/start.json"
