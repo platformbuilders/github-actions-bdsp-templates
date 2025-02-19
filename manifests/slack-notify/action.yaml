@@ -16,29 +16,31 @@ runs:
       run: |
         case "${{ inputs.type }}" in
           start)
-            json_file="start.json"
+            json_file="slack-notify/start.json"
             ;;
           success)
-            json_file="success.json"
+            json_file="slack-notify/success.json"
             ;;
           failure)
-            json_file="failure.json"
+            json_file="slack-notify/failure.json"
             ;;
           *)
             echo "Invalid notification type" && exit 1
           ;;
         esac
+        echo "json_file=$json_file" >> $GITHUB_ENV
+        echo "json_file: $json_file"
       shell: bash
 
     - name: "Send Slack Notification"
+      env:
+        JSON_FILE: ${{ env.json_file }}
       run: |
-        echo "json_file: $json_file"
-
-        if [ ! -f "$json_file" ]; then
-          echo "Error: JSON file not found at $json_file"
+        if [ ! -f "$JSON_FILE" ]; then
+          echo "Error: JSON file not found at $JSON_FILE"
           exit 1
         fi
 
         curl -X POST -H 'Content-type: application/json' \
-        --data @"$json_file" "${{ inputs.webhook_url }}"
+        --data @"$JSON_FILE" "${{ inputs.webhook_url }}"
       shell: bash
