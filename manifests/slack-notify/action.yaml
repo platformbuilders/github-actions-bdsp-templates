@@ -34,9 +34,10 @@ runs:
     - name: "Send Slack Notification"
       env:
         JSON_FILE: ${{ env.json_file }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_REF: ${{ github.ref }}
+        GITHUB_REPOSITORY: $(basename ${{ github.repository }})
+        GITHUB_REF: $(basename ${{ github.ref }})
         GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_RUN_ID: ${{ github.run_id }}
       run: |
         if [ ! -f "$JSON_FILE" ]; then
           echo "Error: JSON file not found at $JSON_FILE"

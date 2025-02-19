@@ -33,7 +33,7 @@
                 "type": "plain_text",
                 "text": "Acompanhar Execução"
               },
-              "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "url": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/{$GITHUB_RUN_ID}"
             }
           ]
         }
