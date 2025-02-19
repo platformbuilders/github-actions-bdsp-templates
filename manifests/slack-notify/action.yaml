@@ -16,13 +16,13 @@ runs:
       run: |
         case "${{ inputs.type }}" in
           start)
-            echo "json_file=slack-notify/start.json" >> $GITHUB_ENV
+            echo "json_file=/manifests/slack-notify/start.json" >> $GITHUB_ENV
             ;;
           success)
-            echo "json_file=slack-notify/success.json" >> $GITHUB_ENV
+            echo "json_file=/manifests/slack-notify/success.json" >> $GITHUB_ENV
             ;;
           failure)
-            echo "json_file=slack-notify/failure.json" >> $GITHUB_ENV
+            echo "json_file=/manifests/slack-notify/failure.json" >> $GITHUB_ENV
             ;;
           *)
             echo "Invalid notification type" && exit 1
