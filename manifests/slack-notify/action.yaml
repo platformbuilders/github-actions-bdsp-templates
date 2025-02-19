@@ -29,13 +29,14 @@ runs:
             ;;
         esac
         echo "json_file=$json_file" >> $GITHUB_ENV
+        echo "json_file: $json_file"
       shell: bash
 
     - name: "Send Slack Notification"
       env:
         JSON_FILE: ${{ env.json_file }}
-        GITHUB_REPOSITORY: $(basename ${{ github.repository }})
-        GITHUB_REF: $(basename ${{ github.ref }})
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_RUN_ID: ${{ github.run_id }}
       run: |
@@ -43,11 +44,17 @@ runs:
           echo "Error: JSON file not found at $JSON_FILE"
           exit 1
         fi
+        
+        REPO_NAME=$(basename ${{ github.repository }})
+        BRANCH_NAME=$(basename ${{ github.ref }})
 
-        # Substitui variáveis no arquivo JSON
+        export REPO_NAME
+        export BRANCH_NAME
+        export GITHUB_ACTOR
+        export GITHUB_RUN_ID
+
         envsubst < "$JSON_FILE" > "temp.json"
-
-        # Envia o arquivo substituído para o Slack
+  
         curl -X POST -H 'Content-type: application/json' \
         --data @"temp.json" "${{ inputs.webhook_url }}"
       shell: bash

@@ -12,11 +12,11 @@
           "fields": [
             {
               "type": "mrkdwn",
-              "text": "*Repositório:*\n${GITHUB_REPOSITORY}"
+              "text": "*Repositório:*\n${REPO_NAME}"
             },
             {
               "type": "mrkdwn",
-              "text": "*Branch:*\n${GITHUB_REF}"
+              "text": "*Branch:*\n${BRANCH_NAME}"
             },
             {
               "type": "mrkdwn",
