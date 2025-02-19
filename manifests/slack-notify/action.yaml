@@ -16,13 +16,13 @@ runs:
       run: |
         case "${{ inputs.type }}" in
           start)
-            echo "json_file=start.json" >> $GITHUB_ENV
+            echo "json_file=start.json" >> $GITHUB_ENV  # Caminho relativo
           ;;
           success)
-            echo "json_file=success.json" >> $GITHUB_ENV
+            echo "json_file=success.json" >> $GITHUB_ENV  # Caminho relativo
           ;;
           failure)
-            echo "json_file=failure.json" >> $GITHUB_ENV
+            echo "json_file=failure.json" >> $GITHUB_ENV  # Caminho relativo
           ;;
           *)
             echo "Invalid notification type" && exit 1
@@ -32,11 +32,11 @@ runs:
 
     - name: "Send Slack Notification"
       run: |
-        if [! -f "$json_file" ]; then
+        if [ ! -f "$json_file" ]; then  # Espaços corrigidos
           echo "Error: JSON file not found at $json_file"
           exit 1
         fi
 
         curl -X POST -H 'Content-type: application/json' \
-        --data @"$json_file" "${{ inputs.webhook_url }}"
+        --data @"$json_file" "${{ inputs.webhook_url }}"  # Aspas corrigidas
       shell: bash
