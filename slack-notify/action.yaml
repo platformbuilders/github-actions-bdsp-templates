@@ -1,0 +1,42 @@
+name: "Slack Notification"
+description: "Send Slack notifications with different messages for start, success, and failure."
+inputs:
+  type:
+    description: "Type of notification: start, success, or failure."
+    required: true
+  webhook_url:
+    description: "The Slack webhook URL to send the notification."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Determine JSON File"
+      id: select-json
+      run: |
+        case "${{ inputs.type }}" in
+          start)
+            echo "json_file=slack-notify/start.json" >> $GITHUB_ENV
+            ;;
+          success)
+            echo "json_file=slack-notify/success.json" >> $GITHUB_ENV
+            ;;
+          failure)
+            echo "json_file=slack-notify/failure.json" >> $GITHUB_ENV
+            ;;
+          *)
+            echo "Invalid notification type" && exit 1
+            ;;
+        esac
+      shell: bash
+
+    - name: "Send Slack Notification"
+      run: |
+        if [ ! -f "$json_file" ]; then
+          echo "Error: JSON file not found at $json_file"
+          exit 1
+        fi
+
+        curl -X POST -H 'Content-type: application/json' \
+        --data @"$json_file" "${{ inputs.webhook_url }}"
+      shell: bash
