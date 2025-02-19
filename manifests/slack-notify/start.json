@@ -21,6 +21,10 @@
             {
               "type": "mrkdwn",
               "text": "*Autor:*\n${GITHUB_ACTOR}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Commit:*\n${COMMIT_SHORT_HASH}"
             }
           ]
         },

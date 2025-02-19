@@ -39,6 +39,7 @@ runs:
         GITHUB_REF: ${{ github.ref }}
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_COMMIT_HASH: ${{ github.sha }}
       run: |
         if [ ! -f "$JSON_FILE" ]; then
           echo "Error: JSON file not found at $JSON_FILE"
@@ -47,11 +48,13 @@ runs:
         
         REPO_NAME=$(basename ${{ github.repository }})
         BRANCH_NAME=$(basename ${{ github.ref }})
+        COMMIT_SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
 
         export REPO_NAME
         export BRANCH_NAME
         export GITHUB_ACTOR
         export GITHUB_RUN_ID
+        export COMMIT_SHORT_HASH
 
         envsubst < "$JSON_FILE" > "temp.json"
   
