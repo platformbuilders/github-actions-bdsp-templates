@@ -12,15 +12,15 @@
           "fields": [
             {
               "type": "mrkdwn",
-              "text": "*Repositório:*\n${{ github.repository }}"
+              "text": "*Repositório:*\n${GITHUB_REPOSITORY}"
             },
             {
               "type": "mrkdwn",
-              "text": "*Branch:*\n${{ github.ref }}"
+              "text": "*Branch:*\n${GITHUB_REF}"
             },
             {
               "type": "mrkdwn",
-              "text": "*Autor:*\n${{ github.actor }}"
+              "text": "*Autor:*\n${GITHUB_ACTOR}"
             }
           ]
         },
