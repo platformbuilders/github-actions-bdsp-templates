@@ -30,25 +30,20 @@ GIT_CLONE_COMMAND="git clone https://${GITHUB_TOKEN}@github.com/platformbuilders
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
-# Gerar o nome do arquivo de deployment dinamicamente
-DEPLOYMENT_FILE="${REPOSITORY_NAME}-dp.yaml"
+# Encontrar o arquivo de deployment
+DEPLOYMENT_FILE=$(find argo-manifests/ -name "*-dp.yaml")
+
+if [[ -z "$DEPLOYMENT_FILE" ]]; then
+  echo "Erro: Arquivo de deployment não encontrado."
+  exit 1
+fi
+
+echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
 # Atualizar o arquivo YAML
-echo "Antes do sed version:"
-cat -A argo-manifests/${DEPLOYMENT_FILE}
-echo "Comando sed version:"
-echo "sed -i \"s/tags.datadoghq.com\/version: \".*\"/tags.datadoghq.com\/version: \\\"$IMAGE_TAG\\\"/g\" argo-manifests/${DEPLOYMENT_FILE}"
-sed -i "s/tags.datadoghq.com\/version: \".*\"/tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" argo-manifests/${DEPLOYMENT_FILE}
-echo "Depois do sed version:"
-cat -A argo-manifests/${DEPLOYMENT_FILE}
 
-echo "Antes do sed image:"
-cat -A argo-manifests/${DEPLOYMENT_FILE}
-echo "Comando sed image:"
-echo "sed -i \"s/image: .*@sha256:.*$/image: us-docker.pkg.dev\\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g\" argo-manifests/${DEPLOYMENT_FILE}"
-sed -i "s/image: .*@sha256:.*$/image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" argo-manifests/${DEPLOYMENT_FILE}
-echo "Depois do sed image:"
-cat -A argo-manifests/${DEPLOYMENT_FILE}
+sed -i "s/ *tags.datadoghq.com\/version:.*$/    tags.datadoghq.com\/version: \\\"$IMAGE_TAG\\\"/g" $DEPLOYMENT_FILE
+sed -i "s/ *image: .*@sha256:.*$/    image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" $DEPLOYMENT_FILE
 
 # Verificar a branch atual
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
@@ -59,7 +54,7 @@ else
   cd argo-manifests
   git config --local user.email "actions@github.com"
   git config --local user.name "GitHub Actions"
-  git add ${DEPLOYMENT_FILE}
+  git add $DEPLOYMENT_FILE
   git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
   git push origin master
 fi
