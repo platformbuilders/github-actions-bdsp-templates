@@ -7,6 +7,9 @@ IMAGE_DIGEST=$2
 GITHUB_TOKEN=$3
 REPOSITORY_NAME=$4
 
+echo "IMAGE_TAG: $IMAGE_TAG"
+echo "IMAGE_DIGEST: $IMAGE_DIGEST"
+
 REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
@@ -42,8 +45,14 @@ echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
 # Atualizar o arquivo YAML
 
-sed -i "s/ *tags.datadoghq.com\/version:.*$/    tags.datadoghq.com\/version: \\\"$IMAGE_TAG\\\"/g" $DEPLOYMENT_FILE
-sed -i "s/ *image: .*@sha256:.*$/    image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" $DEPLOYMENT_FILE
+# Atualizar tags.datadoghq.com/version em metadata.labels
+sed -i "s/ *tags.datadoghq.com\/version: \"\"/    tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+# Atualizar tags.datadoghq.com/version em template.metadata.labels
+sed -i "s/    tags.datadoghq.com\/version: \"\"/    tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+# Atualizar image
+sed -i "s/ *image: us-docker.pkg.dev\/image-registry-326015\/api-notificacao\/staging@/        image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" $DEPLOYMENT_FILE
 
 # Verificar a branch atual
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
