@@ -48,5 +48,5 @@ else
   git config --local user.name "GitHub Actions"
   git add ${DEPLOYMENT_FILE}
   git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
-  git push origin HEAD:${GITHUB_REF_NAME}
+  git push origin master
 fi
