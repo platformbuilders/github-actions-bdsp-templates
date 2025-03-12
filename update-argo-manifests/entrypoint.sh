@@ -13,7 +13,6 @@ echo "IMAGE_DIGEST: $IMAGE_DIGEST"
 REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
-echo "GITHUB_TOKEN: $GITHUB_TOKEN"
 echo "REPOSITORY_NAME: $REPOSITORY_NAME"
 
 # Determinar o Target Repository
@@ -54,16 +53,17 @@ sed -i "s/    tags.datadoghq.com\/version: \"\"/    tags.datadoghq.com\/version:
 # Atualizar image
 sed -i "s/ *image: us-docker.pkg.dev\/image-registry-326015\/api-notificacao\/staging@/        image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" $DEPLOYMENT_FILE
 
-# Verificar a branch atual
+# Commit e push ou abrir PR
+cd argo-manifests
+git config --local user.email "actions@github.com"
+git config --local user.name "GitHub Actions"
+git add "$(basename $DEPLOYMENT_FILE)"
+git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
+
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
-  # Abrir um Pull Request
+  git checkout -b update-deployment
+  git push origin update-deployment
   gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" --body "Update deployment." --base "${GITHUB_REF_NAME}" --head update-deployment
 else
-  # Fazer commit e push das alterações
-  cd argo-manifests
-  git config --local user.email "actions@github.com"
-  git config --local user.name "GitHub Actions"
-  git add "$(basename $DEPLOYMENT_FILE)"
-  git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
   git push origin master
 fi
