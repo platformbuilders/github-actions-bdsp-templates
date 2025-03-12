@@ -14,16 +14,15 @@ runs:
     - name: "Determine JSON File"
       id: select-json
       run: |
-        MANIFESTS_DIR="manifests"
         case "${{ inputs.type }}" in
           start)
-            json_file="${GITHUB_WORKSPACE}/${MANIFESTS_DIR}/manifests/slack-notify/start.json"
+            json_file="${GITHUB_WORKSPACE}/slack-notify/start.json"
             ;;
           success)
-            json_file="${GITHUB_WORKSPACE}/${MANIFESTS_DIR}/manifests/slack-notify/success.json"
+            json_file="${GITHUB_WORKSPACE}/slack-notify/success.json"
             ;;
           failure)
-            json_file="${GITHUB_WORKSPACE}/${MANIFESTS_DIR}/manifests/slack-notify/failure.json"
+            json_file="${GITHUB_WORKSPACE}/slack-notify/failure.json"
             ;;
           *)
             echo "Invalid notification type" && exit 1
