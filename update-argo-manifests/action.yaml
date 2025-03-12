@@ -1,6 +1,9 @@
 name: 'Update Kubernetes Deployment'
 description: 'Updates a Kubernetes deployment YAML file with new image tag and digest'
 inputs:
+  repository-name:
+    description: 'Name of the repository'
+    required: true
   image-tag:
     description: 'New image tag'
     required: true
@@ -14,7 +17,8 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
-
-branding:
-  icon: 'upload-cloud'
-  color: 'green'
+  args:
+    - ${{ inputs.image-tag }}
+    - ${{ inputs.image-digest }}
+    - ${{ inputs.github-token }}
+    - ${{ inputs.repository-name }}

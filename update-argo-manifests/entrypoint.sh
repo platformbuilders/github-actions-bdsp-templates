@@ -2,15 +2,19 @@
 
 set -e
 
-IMAGE_TAG=$INPUT_IMAGE_TAG
-IMAGE_DIGEST=$INPUT_IMAGE_DIGEST
-GITHUB_TOKEN=$INPUT_TOKEN_GITHUB
+IMAGE_TAG=$1
+IMAGE_DIGEST=$2
+GITHUB_TOKEN=$3
+REPOSITORY_NAME=$4
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+echo "REPOSITORY_NAME: $REPOSITORY_NAME"
+
+# Extrair apenas o nome do repositório
+REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 # Determinar o Target Repository
-REPOSITORY_NAME=$(basename "${GITHUB_REPOSITORY_NAME}")
 if [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
   TARGET_REPO="${REPOSITORY_NAME}-hml"
 elif [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
