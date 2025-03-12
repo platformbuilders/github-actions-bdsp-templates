@@ -54,7 +54,7 @@ else
   cd argo-manifests
   git config --local user.email "actions@github.com"
   git config --local user.name "GitHub Actions"
-  git add $DEPLOYMENT_FILE
+  git add "$(basename $DEPLOYMENT_FILE)"
   git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
   git push origin master
 fi
