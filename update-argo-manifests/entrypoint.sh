@@ -4,7 +4,7 @@ set -e
 
 IMAGE_TAG=$INPUT_IMAGE_TAG
 IMAGE_DIGEST=$INPUT_IMAGE_DIGEST
-GITHUB_TOKEN=$INPUT_GITHUB_TOKEN
+GITHUB_TOKEN=$INPUT_TOKEN_GITHUB
 
 # Determinar o Target Repository
 REPOSITORY_NAME=$(basename "${GITHUB_REPOSITORY_NAME}")
@@ -18,14 +18,14 @@ else
 fi
 
 # Clonar o repositório de destino
-git clone https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY_OWNER}/${TARGET_REPO}.git target-repo
+git clone https://${GITHUB_TOKEN}@github.com/platformbuilders/${TARGET_REPO}.git target-repo
 
 # Gerar o nome do arquivo de deployment dinamicamente
-DEPLOYMENT_FILE=$(basename "${GITHUB_REPOSITORY_NAME}")-dp.yaml
+DEPLOYMENT_FILE="${REPOSITORY_NAME}-dp.yaml"
 
 # Atualizar o arquivo YAML
 sed -i "s/tags.datadoghq.com\/version: \".*\"/tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" target-repo/${DEPLOYMENT_FILE}
-sed -i "s/image: .*@sha256:.*$/image: us-docker.pkg.dev\/image-registry-326015\/${GITHUB_REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" target-repo/${DEPLOYMENT_FILE}
+sed -i "s/image: .*@sha256:.*$/image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" target-repo/${DEPLOYMENT_FILE}
 
 # Verificar a branch atual
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
