@@ -7,12 +7,11 @@ IMAGE_DIGEST=$2
 GITHUB_TOKEN=$3
 REPOSITORY_NAME=$4
 
+REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
+
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 echo "GITHUB_TOKEN: $GITHUB_TOKEN"
 echo "REPOSITORY_NAME: $REPOSITORY_NAME"
-
-# Extrair apenas o nome do repositório
-REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 # Determinar o Target Repository
 if [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
@@ -30,12 +29,6 @@ echo "TARGET_REPO: $TARGET_REPO"
 GIT_CLONE_COMMAND="git clone https://${GITHUB_TOKEN}@github.com/platformbuilders/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
-
-# Testar a conexão com o GitHub
-ping -c 3 github.com
-
-# Verificar a configuração do Git
-git config --list
 
 # Gerar o nome do arquivo de deployment dinamicamente
 DEPLOYMENT_FILE="${REPOSITORY_NAME}-dp.yaml"
