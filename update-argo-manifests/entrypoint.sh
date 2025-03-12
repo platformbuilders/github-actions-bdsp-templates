@@ -45,13 +45,13 @@ echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 # Atualizar o arquivo YAML
 
 # Atualizar tags.datadoghq.com/version em metadata.labels
-sed -i "s/ *tags.datadoghq.com\/version: \"\"/    tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
 
 # Atualizar tags.datadoghq.com/version em template.metadata.labels
-sed -i "s/    tags.datadoghq.com\/version: \"\"/    tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
 
 # Atualizar image
-sed -i "s/ *image: us-docker.pkg.dev\/image-registry-326015\/api-notificacao\/staging@/        image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" $DEPLOYMENT_FILE
+sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1${IMAGE_DIGEST}|g" $DEPLOYMENT_FILE
 
 # Commit e push ou abrir PR
 cd argo-manifests
