@@ -34,8 +34,21 @@ $GIT_CLONE_COMMAND
 DEPLOYMENT_FILE="${REPOSITORY_NAME}-dp.yaml"
 
 # Atualizar o arquivo YAML
+echo "Antes do sed version:"
+cat -A argo-manifests/${DEPLOYMENT_FILE}
+echo "Comando sed version:"
+echo "sed -i \"s/tags.datadoghq.com\\/version: \\\".*\\\"/tags.datadoghq.com\\/version: \\\"$IMAGE_TAG\\\"/g\" argo-manifests/${DEPLOYMENT_FILE}"
 sed -i "s/tags.datadoghq.com\/version: \".*\"/tags.datadoghq.com\/version: \"$IMAGE_TAG\"/g" argo-manifests/${DEPLOYMENT_FILE}
+echo "Depois do sed version:"
+cat -A argo-manifests/${DEPLOYMENT_FILE}
+
+echo "Antes do sed image:"
+cat -A argo-manifests/${DEPLOYMENT_FILE}
+echo "Comando sed image:"
+echo "sed -i \"s/image: .*@sha256:.*$/image: us-docker.pkg.dev\\/image-registry-326015\\/${REPOSITORY_NAME}\\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g\" argo-manifests/${DEPLOYMENT_FILE}"
 sed -i "s/image: .*@sha256:.*$/image: us-docker.pkg.dev\/image-registry-326015\/${REPOSITORY_NAME}\/${GITHUB_REF_NAME}@${IMAGE_DIGEST}/g" argo-manifests/${DEPLOYMENT_FILE}
+echo "Depois do sed image:"
+cat -A argo-manifests/${DEPLOYMENT_FILE}
 
 # Verificar a branch atual
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
