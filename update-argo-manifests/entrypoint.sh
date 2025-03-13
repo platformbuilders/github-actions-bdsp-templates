@@ -61,9 +61,13 @@ git add "$(basename $DEPLOYMENT_FILE)"
 git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
 
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
-  git checkout -b update-deployment
-  git push origin update-deployment
-  gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" --body "Update deployment." --base "${GITHUB_REF_NAME}" --head update-deployment
+  git checkout -b update-argo-manifests
+  git pull origin update-argo-manifests --rebase
+  git push origin update-argo-manifests
+  gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" \
+               --body "Update deployment." \
+               --base "${GITHUB_REF_NAME}" \
+               --head update-argo-manifests
 else
   git push origin master
 fi
