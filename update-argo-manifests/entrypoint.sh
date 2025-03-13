@@ -66,21 +66,14 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
   # Trabalhar na branch dev
   git fetch origin dev || git checkout -b dev
   git checkout dev
+  git push origin dev
 
   # Verificar se há mudanças entre dev e master
   if git diff --quiet origin/master..origin/dev; then
     echo "Nenhuma diferença entre master e dev. Nenhum PR será criado."
     exit 0
   fi
-
-  # Fazer o push para dev
-  git push origin dev
-  
-  # Agora, enviar as mudanças da dev para master
-  git checkout master
-  git merge dev --no-ff -m "Merge changes from dev to master"
-  git push origin master
-  
+    
   # Criar PR da dev -> master
   echo "Alterações detectadas! Criando Pull Request..."
   gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" \
