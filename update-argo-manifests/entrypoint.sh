@@ -58,20 +58,34 @@ cd argo-manifests
 git config --local user.email "actions@github.com"
 git config --local user.name "GitHub Actions"
 
+# Adicionar mudanças ao git
 git add "$(basename $DEPLOYMENT_FILE)"
 git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
 
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
-
+  # Trabalhar na branch dev
   git fetch origin dev || git checkout -b dev
   git checkout dev
-  git pull origin dev --rebase
+
+  # Verificar se há mudanças entre dev e master
+  if git diff --quiet origin/master..origin/dev; then
+    echo "Nenhuma diferença entre master e dev. Nenhum PR será criado."
+    exit 0
+  fi
+
+  # Fazer o push para dev
   git push origin dev
   
-  # Criar PR da dev -> master/main
+  # Agora, enviar as mudanças da dev para master
+  git checkout master
+  git merge dev --no-ff -m "Merge changes from dev to master"
+  git push origin master
+  
+  # Criar PR da dev -> master
+  echo "Alterações detectadas! Criando Pull Request..."
   gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" \
                --body "Update deployment." \
-               --base "${GITHUB_REF_NAME}" \
+               --base master \
                --head dev
 elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
   # Para staging, faz push direto para master
