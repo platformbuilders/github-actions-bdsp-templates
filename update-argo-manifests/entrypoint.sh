@@ -57,17 +57,25 @@ sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${
 cd argo-manifests
 git config --local user.email "actions@github.com"
 git config --local user.name "GitHub Actions"
+
 git add "$(basename $DEPLOYMENT_FILE)"
 git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
 
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
-  git checkout -b dev
+
+  git fetch origin dev || git checkout -b dev
+  git checkout dev
   git pull origin dev --rebase
   git push origin dev
+  
+  # Criar PR da dev -> master/main
   gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" \
                --body "Update deployment." \
                --base "${GITHUB_REF_NAME}" \
                --head dev
-else
+elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+  # Para staging, faz push direto para master
   git push origin master
+else
+  echo "Nenhuma ação necessária para a branch ${GITHUB_REF_NAME}"
 fi
