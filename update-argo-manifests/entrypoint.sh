@@ -58,14 +58,11 @@ cd argo-manifests
 git config --local user.email "actions@github.com"
 git config --local user.name "GitHub Actions"
 
-# Adicionar mudanças ao git
-git add "$(basename $DEPLOYMENT_FILE)"
-git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
-
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
   # Trabalhar na branch dev
-  git fetch origin dev || git checkout -b dev
   git checkout dev
+  git add "$(basename $DEPLOYMENT_FILE)"
+  git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
   git push origin dev
 
   # Verificar se há mudanças entre dev e master
@@ -81,7 +78,9 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
                --base master \
                --head dev
 elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
-  # Para staging, faz push direto para master
+  git checkout master
+  git add "$(basename $DEPLOYMENT_FILE)"
+  git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
   git push origin master
 else
   echo "Nenhuma ação necessária para a branch ${GITHUB_REF_NAME}"
