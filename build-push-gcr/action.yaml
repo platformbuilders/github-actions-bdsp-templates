@@ -1,16 +1,8 @@
 name: 'Build and Push Docker Image to GCR'
 description: 'Builds and pushes a Docker image to Google Container Registry (GCR) based on the branch.'
-inputs:
-  gcp-service-account-key:
-    description: 'Base64 encoded GCP service account key.'
-    required: true
-
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.gcp-service-account-key }}
-
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
