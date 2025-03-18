@@ -24,19 +24,26 @@ else
 fi
 echo "REPOSITORY_URI: $REPOSITORY_URI"
 
+# Build with original tag
 docker build -t "$REPOSITORY_URI":"$SHORT_SHA" .
 
 gcloud auth configure-docker us-docker.pkg.dev
 
+# Push with original tag
 docker push "$REPOSITORY_URI":"$SHORT_SHA"
+
+# Get image digest AFTER push (important)
+IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI":"$SHORT_SHA" | cut -d '@' -f 2)
+
+# Tag image with digest
+docker tag "$REPOSITORY_URI":"$SHORT_SHA" "$REPOSITORY_URI":"$IMAGE_DIGEST"
+
+# Push with digest tag
+docker push "$REPOSITORY_URI":"$IMAGE_DIGEST"
 
 echo "Build and push realizado"
 
-# Get image digest
-IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI":"$SHORT_SHA" | cut -d '@' -f 2)
-echo "IMAGE_DIGEST: $IMAGE_DIGEST"
-IMAGE_TAG="$SHORT_SHA"
-echo "IMAGE_TAG: $IMAGE_TAG"
+IMAGE_TAG="$SHORT_SHA" # Use original tag
 
 # Output image tag and digest
 echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
