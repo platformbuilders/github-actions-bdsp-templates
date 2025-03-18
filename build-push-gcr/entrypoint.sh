@@ -9,7 +9,6 @@ git config --global --add safe.directory /github/workspace
 
 # Get short SHA
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
-echo "SHORT_SHA: $SHORT_SHA"
 
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
@@ -26,6 +25,9 @@ fi
 echo "REPOSITORY_URI: $REPOSITORY_URI"
 
 docker build -t "$REPOSITORY_URI":"$SHORT_SHA" .
+
+gcloud auth configure-docker us-docker.pkg.dev
+
 docker push "$REPOSITORY_URI":"$SHORT_SHA"
 
 echo "Build and push realizado"
