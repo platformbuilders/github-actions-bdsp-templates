@@ -12,7 +12,6 @@ SHORT_SHA=$(git rev-parse --short=7 HEAD)
 
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
-echo "REPOSITORY_NAME: $REPOSITORY_NAME"
 
 if [[ "$GITHUB_REF_NAME" == "staging" ]]; then
   REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging"
@@ -24,22 +23,25 @@ else
 fi
 echo "REPOSITORY_URI: $REPOSITORY_URI"
 
-# Build with original tag
 docker build -t "$REPOSITORY_URI":"$SHORT_SHA" .
 
 gcloud auth configure-docker us-docker.pkg.dev
 
-# Push with original tag
 docker push "$REPOSITORY_URI":"$SHORT_SHA"
 
-# Get image digest AFTER push (important)
+echo "Build and push realizado"
+
+# Get image digest
 IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI":"$SHORT_SHA" | cut -d '@' -f 2)
 
-# Tag image with digest
-docker tag "$REPOSITORY_URI":"$SHORT_SHA" "$REPOSITORY_URI":"$IMAGE_DIGEST"
+# Replace colons in digest
+IMAGE_DIGEST_SAFE=$(echo "$IMAGE_DIGEST" | tr ':' '-')
 
-# Push with digest tag
-docker push "$REPOSITORY_URI":"$IMAGE_DIGEST"
+# Tag image with safe digest
+docker tag "$REPOSITORY_URI":"$SHORT_SHA" "$REPOSITORY_URI":"$IMAGE_DIGEST_SAFE"
+
+# Push with safe digest tag
+docker push "$REPOSITORY_URI":"$IMAGE_DIGEST_SAFE"
 
 echo "Build and push realizado"
 
