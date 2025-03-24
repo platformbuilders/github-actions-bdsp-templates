@@ -16,13 +16,13 @@ runs:
       run: |
         case "${{ inputs.type }}" in
           start)
-            json_file="./start.json"
+            json_file="${GITHUB_ACTION_PATH}/start.json"
             ;;
           success)
-            json_file="./success.json"
+            json_file="${GITHUB_ACTION_PATH}/success.json"
             ;;
           failure)
-            json_file="./failure.json"
+            json_file="${GITHUB_ACTION_PATH}/failure.json"
             ;;
           *)
             echo "Invalid notification type" && exit 1
