@@ -73,14 +73,14 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
     
   # Criar PR da dev -> master
   echo "Alterações detectadas! Criando Pull Request..."
-  gh pr create --title "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}" \
+  gh pr create --title "Update deployment with image: ${IMAGE_TAG}" \
                --body "Update deployment." \
                --base master \
                --head dev
 elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
   git checkout master
   git add "$(basename $DEPLOYMENT_FILE)"
-  git commit -m "Update deployment with image: ${IMAGE_TAG}@${IMAGE_DIGEST}"
+  git commit -m "Update deployment with image: ${IMAGE_TAG}"
   git push origin master
 else
   echo "Nenhuma ação necessária para a branch ${GITHUB_REF_NAME}"
