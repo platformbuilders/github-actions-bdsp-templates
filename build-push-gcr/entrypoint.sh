@@ -34,17 +34,6 @@ echo "Build and push realizado"
 # Get image digest
 IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI":"$SHORT_SHA" | cut -d '@' -f 2)
 
-# Replace colons in digest
-IMAGE_DIGEST_SAFE=$(echo "$IMAGE_DIGEST" | tr ':' '-')
-
-# Tag image with safe digest
-docker tag "$REPOSITORY_URI":"$SHORT_SHA" "$REPOSITORY_URI":"$IMAGE_DIGEST_SAFE"
-
-# Push with safe digest tag
-docker push "$REPOSITORY_URI":"$IMAGE_DIGEST_SAFE"
-
-echo "Build and push realizado"
-
 IMAGE_TAG="$SHORT_SHA" # Use original tag
 
 # Output image tag and digest
