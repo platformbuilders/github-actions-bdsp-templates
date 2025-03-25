@@ -28,8 +28,14 @@ else
 fi
 echo "REPOSITORY_URI: $REPOSITORY_URI"
 
-# Receber as credenciais da conta de serviço
-echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-sa.json
+# Validar se a secret está em Base64
+if echo "$GCP_SERVICE_ACCOUNT_KEY" | base64 -d &>/dev/null; then
+    echo "Decodificando secret em Base64..."
+    echo "$GCP_SERVICE_ACCOUNT_KEY" | base64 -d > gcp-sa.json
+else
+    echo "Secret já está no formato correto, salvando diretamente..."
+    echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-sa.json
+fi
 
 # Autenticar o gcloud
 gcloud auth activate-service-account --key-file=gcp-sa.json
