@@ -9,7 +9,6 @@ git config --global --add safe.directory /github/workspace
 
 # Get short SHA
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
-
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
 
@@ -23,21 +22,24 @@ else
 fi
 echo "REPOSITORY_URI: $REPOSITORY_URI"
 
-docker build -t "$REPOSITORY_URI":"$SHORT_SHA" .
+# Receber as credenciais da conta de serviço
+echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-sa.json
 
+# Autenticar o gcloud
+gcloud auth activate-service-account --key-file=gcp-sa.json
+# Configurar o Docker para autenticar com o GCR
 gcloud auth configure-docker us-docker.pkg.dev
 
+docker build -t "$REPOSITORY_URI":"$SHORT_SHA" .
 docker push "$REPOSITORY_URI":"$SHORT_SHA"
 
 echo "Build and push realizado"
 
 # Get image digest
 IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI":"$SHORT_SHA" | cut -d '@' -f 2)
-
 IMAGE_TAG="$SHORT_SHA" # Use original tag
 
 # Output image tag and digest
 echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-
 echo "Outputs definidos"
