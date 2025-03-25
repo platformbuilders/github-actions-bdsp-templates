@@ -16,8 +16,10 @@ echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 echo "REPOSITORY_NAME: $REPOSITORY_NAME"
 
 # Determinar o Target Repository
-if [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+if [[ "${GITHUB_REF_NAME}" == "staging" || "${GITHUB_REF_NAME}" =~ ^release/ || "${GITHUB_REF_NAME}" == "homolog"  ]]; then
   TARGET_REPO="${REPOSITORY_NAME}-hml"
+elif [[ "${GITHUB_REF_NAME}" == "develop" ]]; then
+  TARGET_REPO="${REPOSITORY_NAME}-dev"
 elif [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
   TARGET_REPO="${REPOSITORY_NAME}-prd"
 else

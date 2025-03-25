@@ -16,6 +16,12 @@ if [[ "$GITHUB_REF_NAME" == "staging" ]]; then
   REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging"
 elif [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master"
+elif [[ "$GITHUB_REF_NAME" == "develop" ]]; then
+  REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop"
+elif [[ "$GITHUB_REF_NAME" =~ ^release/ ]]; then
+  REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release"
+elif [[ "$GITHUB_REF_NAME" == "homolog" ]]; then
+  REPOSITORY_URI="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/homolog"
 else
   echo "Branch not supported: $GITHUB_REF_NAME"
   exit 1
