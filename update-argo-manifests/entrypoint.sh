@@ -74,12 +74,21 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
     exit 0
   fi
 
-  # Criar PR da dev -> master
-  echo "Alterações detectadas! Criando Pull Request..."
-  gh pr create --title "Update deployment with image: $IMAGE_TAG" \
-               --body "Update deployment with image: $IMAGE_TAG" \
-               --base master \
-               --head dev
+  # Verificar se já existe um PR aberto ESPECÍFICO para dev -> master
+  EXISTING_PR=$(gh pr list --base master --head dev --json number --jq '.[].number' 2>/dev/null)
+
+  if [[ -n "$EXISTING_PR" ]]; then
+    echo "Já existe um PR aberto (PR #$EXISTING_PR)"
+  else
+    # Criar PR da dev -> master
+    echo "Alterações detectadas! Criando Pull Request..."
+    gh pr create --title "Update deployment with image: $IMAGE_TAG" \
+                 --body "Update deployment with image: $IMAGE_TAG" \
+                 --base master \
+                 --head dev
+  fi
+
+
 
 elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "homolog" || "$GITHUB_REF_NAME" == "develop" ]]; then
   git checkout master
