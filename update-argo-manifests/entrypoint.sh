@@ -76,6 +76,7 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
   # Criar PR da dev -> master
   echo "Alterações detectadas! Criando Pull Request..."
   gh pr create --title "Update deployment with image: ${IMAGE_TAG}" \
+               --body "Update deployment with image: ${IMAGE_TAG}" \
                --base master \
                --head dev
 
