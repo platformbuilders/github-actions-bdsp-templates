@@ -44,25 +44,27 @@ fi
 
 echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
-# Atualizar o arquivo YAML
-
-# Atualizar tags.datadoghq.com/version em metadata.labels
-sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
-
-# Atualizar tags.datadoghq.com/version em template.metadata.labels
-sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
-
-# Atualizar image
-sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1${IMAGE_DIGEST}|g" $DEPLOYMENT_FILE
-
-# Commit e push ou abrir PR
 cd argo-manifests
-git config --local user.email "actions@github.com"
-git config --local user.name "GitHub Actions"
 
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
   # Trabalhar na branch dev
-  git checkout -f dev
+  git checkout dev
+
+  # Atualizar o arquivo YAML
+
+  # Atualizar tags.datadoghq.com/version em metadata.labels
+  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+  # Atualizar tags.datadoghq.com/version em template.metadata.labels
+  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+  # Atualizar image
+  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1${IMAGE_DIGEST}|g" $DEPLOYMENT_FILE
+
+  # Commit e push ou abrir PR
+  
+  git config --local user.email "actions@github.com"
+  git config --local user.name "GitHub Actions"
   git add "$(basename $DEPLOYMENT_FILE)"
   git commit -m "Update deployment with image: ${IMAGE_TAG}"
   git push origin dev
@@ -82,6 +84,21 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
 
 elif [[ "${GITHUB_REF_NAME}" == "staging" || "${GITHUB_REF_NAME}" =~ ^release/ || "${GITHUB_REF_NAME}" == "homolog" || "${GITHUB_REF_NAME}" == "develop"  ]]; then
   git checkout master
+
+  # Atualizar o arquivo YAML
+
+  # Atualizar tags.datadoghq.com/version em metadata.labels
+  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+  # Atualizar tags.datadoghq.com/version em template.metadata.labels
+  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" $DEPLOYMENT_FILE
+
+  # Atualizar image
+  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1${IMAGE_DIGEST}|g" $DEPLOYMENT_FILE
+
+  
+  git config --local user.email "actions@github.com"
+  git config --local user.name "GitHub Actions"
   git add "$(basename $DEPLOYMENT_FILE)"
   git commit -m "Update deployment with image: ${IMAGE_TAG}"
   git push origin master
