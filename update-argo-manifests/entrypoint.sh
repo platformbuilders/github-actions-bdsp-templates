@@ -59,12 +59,12 @@ sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${
 cd argo-manifests
 git config --local user.email "actions@github.com"
 git config --local user.name "GitHub Actions"
-git add "$(basename $DEPLOYMENT_FILE)"
-git commit -m "Update deployment with image: ${IMAGE_TAG}"
 
 if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; then
   # Trabalhar na branch dev
-  git checkout dev
+  git checkout -f dev
+  git add "$(basename $DEPLOYMENT_FILE)"
+  git commit -m "Update deployment with image: ${IMAGE_TAG}"
   git push origin dev
 
   # Verificar se há mudanças entre dev e master
@@ -82,6 +82,8 @@ if [[ "${GITHUB_REF_NAME}" == "master" || "${GITHUB_REF_NAME}" == "main" ]]; the
 
 elif [[ "${GITHUB_REF_NAME}" == "staging" || "${GITHUB_REF_NAME}" =~ ^release/ || "${GITHUB_REF_NAME}" == "homolog" || "${GITHUB_REF_NAME}" == "develop"  ]]; then
   git checkout master
+  git add "$(basename $DEPLOYMENT_FILE)"
+  git commit -m "Update deployment with image: ${IMAGE_TAG}"
   git push origin master
 else
   echo "Nenhuma ação necessária para a branch ${GITHUB_REF_NAME}"
