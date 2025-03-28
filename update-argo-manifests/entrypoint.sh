@@ -41,7 +41,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
   # Encontrar o arquivo de deployment
   DEPLOYMENT_FILE=$(find . -name "*-dp.yaml" | head -n 1)
-
+  DEPLOYMENT_FILENAME=$(basename "$DEPLOYMENT_FILE")
+  DEPLOYMENT_NAME=$(echo "$DEPLOYMENT_FILENAME" | sed 's/\.yaml$//')
+  
   if [[ -z "$DEPLOYMENT_FILE" ]]; then
     echo "Erro: Arquivo de deployment não encontrado no branch dev."
     exit 1
@@ -52,14 +54,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   # Criar o arquivo kustomization.yaml temporário e rodar o kustomize build
   cat <<EOF > kustomization.yaml
 resources:
-- $(basename "$DEPLOYMENT_FILE")
-patchesJson6902:
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: $(basename "$DEPLOYMENT_FILE" | sed 's/\.yaml$//')
-  patch: |-
+- $DEPLOYMENT_FILE
+patches:
+- patch: |-
     - op: replace
       path: /metadata/labels/tags.datadoghq.com~1version
       value: "$IMAGE_TAG"
@@ -67,11 +64,32 @@ patchesJson6902:
       path: /spec/template/metadata/labels/tags.datadoghq.com~1version
       value: "$IMAGE_TAG"
     - op: replace
-      path: /spec/template/spec/containers/0/image
+      path: /spec/template/spec/containers/0/image # Assume que é sempre o primeiro container
       value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: $DEPLOYMENT_NAME
 EOF
 
-  kustomize build . > "$(basename "$DEPLOYMENT_FILE")"
+  TEMP_FILE_KUSTOMIZE="temp_kustomize_output.yaml"
+  echo "Executando kustomize build para arquivo temporário '$TEMP_FILE_KUSTOMIZE'..."
+
+if kustomize build . > "$TEMP_FILE_KUSTOMIZE"; then
+  echo "Kustomize build executado com sucesso."
+  mv "$TEMP_FILE_KUSTOMIZE" "$DEPLOYMENT_FILE"
+  rm -f "$TEMP_FILE_KUSTOMIZE"
+  rm -f kustomization.yaml
+  echo "Arquivo '$DEPLOYMENT_FILE' atualizado."
+
+else
+  echo "Erro Crítico: Falha na execução do 'kustomize build' !"
+  echo "O arquivo '$DEPLOYMENT_FILE' NÃO foi modificado."
+  rm -f "$TEMP_FILE_KUSTOMIZE"
+  rm -f kustomization.yaml
+  exit 1
+fi
 
   # Commit e push
   git config --local user.email "actions@github.com"
@@ -105,6 +123,8 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
 
   # Encontrar o arquivo de deployment
   DEPLOYMENT_FILE=$(find . -name "*-dp.yaml" | head -n 1)
+  DEPLOYMENT_FILENAME=$(basename "$DEPLOYMENT_FILE")
+  DEPLOYMENT_NAME=$(echo "$DEPLOYMENT_FILENAME" | sed 's/\.yaml$//')
 
   if [[ -z "$DEPLOYMENT_FILE" ]]; then
     echo "Erro: Arquivo de deployment não encontrado no branch master."
@@ -116,14 +136,9 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
   # Criar o arquivo kustomization.yaml temporário e rodar o kustomize build
   cat <<EOF > kustomization.yaml
 resources:
-- $(basename "$DEPLOYMENT_FILE")
-patchesJson6902:
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: $(basename "$DEPLOYMENT_FILE" | sed 's/\.yaml$//')
-  patch: |-
+- $DEPLOYMENT_FILE
+patches:
+- patch: |-
     - op: replace
       path: /metadata/labels/tags.datadoghq.com~1version
       value: "$IMAGE_TAG"
@@ -131,11 +146,32 @@ patchesJson6902:
       path: /spec/template/metadata/labels/tags.datadoghq.com~1version
       value: "$IMAGE_TAG"
     - op: replace
-      path: /spec/template/spec/containers/0/image
+      path: /spec/template/spec/containers/0/image # Assume que é sempre o primeiro container
       value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: $DEPLOYMENT_NAME
 EOF
 
-  kustomize build . > "$(basename "$DEPLOYMENT_FILE")"
+  TEMP_FILE_KUSTOMIZE="temp_kustomize_output.yaml"
+  echo "Executando kustomize build para arquivo temporário '$TEMP_FILE_KUSTOMIZE'..."
+
+if kustomize build . > "$TEMP_FILE_KUSTOMIZE"; then
+  echo "Kustomize build executado com sucesso."
+  mv "$TEMP_FILE_KUSTOMIZE" "$DEPLOYMENT_FILE"
+  rm -f "$TEMP_FILE_KUSTOMIZE"
+  rm -f kustomization.yaml
+  echo "Arquivo '$DEPLOYMENT_FILE' atualizado."
+
+else
+  echo "Erro Crítico: Falha na execução do 'kustomize build' !"
+  echo "O arquivo '$DEPLOYMENT_FILE' NÃO foi modificado."
+  rm -f "$TEMP_FILE_KUSTOMIZE"
+  rm -f kustomization.yaml
+  exit 1
+fi
 
   # Commit e push
   git config --local user.email "actions@github.com"
