@@ -1,16 +1,21 @@
 #!/bin/bash
 
-set -e
+set -ex
 
-IMAGE_TAG="$1"
-IMAGE_DIGEST="$2"
+echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
+
+# Adicionar o diretório workspace à lista de diretórios seguros
+git config --global --add safe.directory /github/workspace
+
+# Get short SHA
+SHORT_SHA=$(git rev-parse --short=7 HEAD)
+# Build and Push Docker image
+REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
+
+echo "IMAGE_TAG: $1"
+echo "IMAGE_DIGEST: $2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME="$4"
-
-echo "IMAGE_TAG: $IMAGE_TAG"
-echo "IMAGE_DIGEST: $IMAGE_DIGEST"
-
-REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 echo "REPOSITORY_NAME: $REPOSITORY_NAME"
@@ -37,7 +42,6 @@ $GIT_CLONE_COMMAND
 cd argo-manifests
 
 if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
-  # Checkout do branch dev ANTES de encontrar o arquivo
   git checkout dev
 
   # Encontrar o arquivo de deployment
@@ -50,16 +54,29 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
-  # Atualizar o arquivo YAML
+  # Atualizar o arquivo YAML usando Kustomize via pipe
+  cat <<EOF | kustomize build -
+resources:
+- $(basename "$DEPLOYMENT_FILE")
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: $(basename "$DEPLOYMENT_FILE" | sed 's/\.yaml$//')
+  patch: |-
+    - op: replace
+      path: /metadata/labels/tags.datadoghq.com~1version
+      value: "$IMAGE_TAG"
+    - op: replace
+      path: /spec/template/metadata/labels/tags.datadoghq.com~1version
+      value: "$IMAGE_TAG"
+    - op: replace
+      path: /spec/template/spec/containers/0/image
+      value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
+EOF
 
-  # Atualizar tags.datadoghq.com/version em metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar tags.datadoghq.com/version em template.metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar image
-  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1$IMAGE_DIGEST|g" "$DEPLOYMENT_FILE"
+  mv /dev/stdout "$(basename "$DEPLOYMENT_FILE")"
 
   # Commit e push
   git config --local user.email "actions@github.com"
@@ -88,8 +105,6 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
                  --head dev
   fi
 
-
-
 elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "homolog" || "$GITHUB_REF_NAME" == "develop" ]]; then
   git checkout master
 
@@ -103,16 +118,29 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
 
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
-  # Atualizar o arquivo YAML
+  # Atualizar o arquivo YAML usando Kustomize via pipe
+  cat <<EOF | kustomize build -
+resources:
+- $(basename "$DEPLOYMENT_FILE")
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: $(basename "$DEPLOYMENT_FILE" | sed 's/\.yaml$//')
+  patch: |-
+    - op: replace
+      path: /metadata/labels/tags.datadoghq.com~1version
+      value: "$IMAGE_TAG"
+    - op: replace
+      path: /spec/template/metadata/labels/tags.datadoghq.com~1version
+      value: "$IMAGE_TAG"
+    - op: replace
+      path: /spec/template/spec/containers/0/image
+      value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
+EOF
 
-  # Atualizar tags.datadoghq.com/version em metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar tags.datadoghq.com/version em template.metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar image
-  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1$IMAGE_DIGEST|g" "$DEPLOYMENT_FILE"
+  mv /dev/stdout "$(basename "$DEPLOYMENT_FILE")"
 
   # Commit e push
   git config --local user.email "actions@github.com"
