@@ -1,10 +1,11 @@
 FROM ubuntu:latest
 
 RUN apt-get update && \
-    apt-get install -y git sed gh curl
+    apt-get install -y git gh && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash && \
-    mv kustomize /usr/local/bin/
+RUN curl -sSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
