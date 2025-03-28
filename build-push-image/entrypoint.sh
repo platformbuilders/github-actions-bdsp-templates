@@ -63,6 +63,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 # Verificar se a branch é release/*, staging ou homolog
 elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
   docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
+  docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA" # Tag a imagem para /master
   docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
   docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
