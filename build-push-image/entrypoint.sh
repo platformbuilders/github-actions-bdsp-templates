@@ -76,11 +76,10 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
   echo "Outputs definidos."
 
-fi
 
 
 # Verificar se a branch é release/*, staging ou homolog
-if [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
+elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
   docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
   docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA" # Tag a imagem para master
   docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
