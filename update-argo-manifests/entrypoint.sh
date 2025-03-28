@@ -1,21 +1,16 @@
 #!/bin/bash
 
-set -ex
+set -e
 
-echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
-
-# Adicionar o diretório workspace à lista de diretórios seguros
-git config --global --add safe.directory /github/workspace
-
-# Get short SHA
-SHORT_SHA=$(git rev-parse --short=7 HEAD)
-# Build and Push Docker image
-REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
-
-echo "IMAGE_TAG: $1"
-echo "IMAGE_DIGEST: $2"
+IMAGE_TAG="$1"
+IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME="$4"
+
+echo "IMAGE_TAG: $IMAGE_TAG"
+echo "IMAGE_DIGEST: $IMAGE_DIGEST"
+
+REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 echo "REPOSITORY_NAME: $REPOSITORY_NAME"
