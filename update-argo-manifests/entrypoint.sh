@@ -40,7 +40,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   git checkout dev
 
   # Encontrar o arquivo de deployment
-  DEPLOYMENT_FILE=$(find . -name "*-dp.yaml")
+  DEPLOYMENT_FILE=$(find . -name "*-dp.yaml" | head -n 1)
 
   if [[ -z "$DEPLOYMENT_FILE" ]]; then
     echo "Erro: Arquivo de deployment não encontrado no branch dev."
@@ -49,8 +49,8 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
-  # Atualizar o arquivo YAML usando Kustomize via pipe
-  cat <<EOF | kustomize build -
+  # Criar o arquivo kustomization.yaml temporário e rodar o kustomize build
+  cat <<EOF > kustomization.yaml
 resources:
 - $(basename "$DEPLOYMENT_FILE")
 patchesJson6902:
@@ -71,7 +71,7 @@ patchesJson6902:
       value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
 EOF
 
-  mv /dev/stdout "$(basename "$DEPLOYMENT_FILE")"
+  kustomize build . > "$(basename "$DEPLOYMENT_FILE")"
 
   # Commit e push
   git config --local user.email "actions@github.com"
@@ -104,7 +104,7 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
   git checkout master
 
   # Encontrar o arquivo de deployment
-  DEPLOYMENT_FILE=$(find . -name "*-dp.yaml")
+  DEPLOYMENT_FILE=$(find . -name "*-dp.yaml" | head -n 1)
 
   if [[ -z "$DEPLOYMENT_FILE" ]]; then
     echo "Erro: Arquivo de deployment não encontrado no branch master."
@@ -113,8 +113,8 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
 
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
-  # Atualizar o arquivo YAML usando Kustomize via pipe
-  cat <<EOF | kustomize build -
+  # Criar o arquivo kustomization.yaml temporário e rodar o kustomize build
+  cat <<EOF > kustomization.yaml
 resources:
 - $(basename "$DEPLOYMENT_FILE")
 patchesJson6902:
@@ -135,7 +135,7 @@ patchesJson6902:
       value: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST
 EOF
 
-  mv /dev/stdout "$(basename "$DEPLOYMENT_FILE")"
+  kustomize build . > "$(basename "$DEPLOYMENT_FILE")"
 
   # Commit e push
   git config --local user.email "actions@github.com"
