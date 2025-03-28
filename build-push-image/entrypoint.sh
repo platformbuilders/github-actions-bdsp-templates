@@ -4,6 +4,7 @@ set -ex
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
+
 # Adicionar o diretório workspace à lista de diretórios seguros
 git config --global --add safe.directory /github/workspace
 
@@ -50,17 +51,38 @@ gcloud auth configure-docker us-docker.pkg.dev
 
 # Verificar se a branch é master ou main
 if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
-  LATEST_IMAGE_INFO=$(gcloud artifacts docker images list "$REPOSITORY_URI_PRD" \
+  echo "Buscando a imagem mais recente em $REPOSITORY_URI_PRD..."
+
+  LATEST_IMAGE_LINE=$(gcloud artifacts docker images list --include-tags "$REPOSITORY_URI_PRD" \
       --sort-by=~UPDATE_TIME \
       --limit=1 \
-      --format='value(tags, image_summary.digest)' 2>/dev/null)
+      --quiet \
+      | tail -n 1)
 
-  IMAGE_TAG=$(echo "$LATEST_IMAGE_INFO" | awk '{print $1}' | cut -d ',' -f 1)
-  IMAGE_DIGEST_WITH_PREFIX=$(echo "$LATEST_IMAGE_INFO" | awk '{print $2}')
+  
+  if [[ -z "$LATEST_IMAGE_LINE" ]]; then
+      echo "Erro Crítico: Nenhuma linha de dados retornada por gcloud."
+      exit 1
+  fi
+
+  
+  IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
+  IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | awk '{print $3}')
+
+  
+  if [[ -z "$IMAGE_TAG" ]] || [[ -z "$IMAGE_DIGEST" ]] || [[ ! "$IMAGE_DIGEST" =~ ^sha256: ]]; then
+     echo "Erro Crítico: Falha ao extrair tag ou digest válido da linha."
+     echo "Linha processada: '$LATEST_IMAGE_LINE'"
+     exit 1
+  fi
+
+  echo "Imagem encontrada: Tag=$IMAGE_TAG, Digest=$IMAGE_DIGEST"
 
   # Define os outputs
   echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-  echo "IMAGE_DIGEST=$IMAGE_DIGEST_WITH_PREFIX" >> "$GITHUB_OUTPUT"
+  echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+  echo "Outputs definidos."
+fi
 
 # Verificar se a branch é release/*, staging ou homolog
 elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
