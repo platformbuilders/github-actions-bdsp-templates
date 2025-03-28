@@ -50,15 +50,17 @@ gcloud auth configure-docker us-docker.pkg.dev
 
 # Verificar se a branch é master ou main
 if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
-  echo "Branch master ou main detectada. Pulando build e push, pegando da master."
-  # Get image digest
-  IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_PRD":"$SHORT_SHA" | cut -d '@' -f 2)
-  IMAGE_TAG="$SHORT_SHA" # Use original tag
+  LATEST_IMAGE_INFO=$(gcloud artifacts docker images list "$REPOSITORY_URI_PRD" \
+      --sort-by=~UPDATE_TIME \
+      --limit=1 \
+      --format='value(tags, image_summary.digest)' 2>/dev/null)
 
-  # Output image tag and digest
+  IMAGE_TAG=$(echo "$LATEST_IMAGE_INFO" | awk '{print $1}' | cut -d ',' -f 1)
+  IMAGE_DIGEST_WITH_PREFIX=$(echo "$LATEST_IMAGE_INFO" | awk '{print $2}')
+
+  # Define os outputs
   echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-  echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-  echo "Outputs definidos"
+  echo "IMAGE_DIGEST=$IMAGE_DIGEST_WITH_PREFIX" >> "$GITHUB_OUTPUT"
 
 # Verificar se a branch é release/*, staging ou homolog
 elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
@@ -93,3 +95,5 @@ else
   echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
   echo "Outputs definidos"
 fi
+
+rm -f gcp-sa.json
