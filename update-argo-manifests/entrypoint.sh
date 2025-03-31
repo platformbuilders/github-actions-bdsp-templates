@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"

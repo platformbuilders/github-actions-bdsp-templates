@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
@@ -90,10 +90,12 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
   # Get image digest
   IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" | cut -d '@' -f 2)
   IMAGE_TAG="$SHORT_SHA" # Use original tag
+  IMAGE_URI="$REPOSITORY_URI_BRANCH:$SHORT_SHA"
 
   # Output image tag and digest
   echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
   echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+  echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
   echo "Outputs definidos"
 
 else
@@ -105,10 +107,12 @@ else
   # Get image digest
   IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" | cut -d '@' -f 2)
   IMAGE_TAG="$SHORT_SHA" # Use original tag
+  IMAGE_URI="$REPOSITORY_URI_BRANCH:$SHORT_SHA"
 
   # Output image tag and digest
   echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
   echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+  echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
   echo "Outputs definidos"
 fi
 
