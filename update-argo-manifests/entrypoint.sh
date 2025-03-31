@@ -51,15 +51,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
   # Atualizar o arquivo YAML
-
-  # Atualizar tags.datadoghq.com/version em metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar tags.datadoghq.com/version em template.metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar image
-  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1$IMAGE_DIGEST|g" "$DEPLOYMENT_FILE"
+  yq -i ".metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
+  yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
+  yq -i ".spec.template.spec.containers[0].image = \"us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST\"" "$DEPLOYMENT_FILE"
 
   # Commit e push
   git config --local user.email "actions@github.com"
@@ -104,15 +98,9 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
   # Atualizar o arquivo YAML
-
-  # Atualizar tags.datadoghq.com/version em metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar tags.datadoghq.com/version em template.metadata.labels
-  sed -i "s/\(tags.datadoghq.com\/version: \)\"[^\"]*\"/\1\"$IMAGE_TAG\"/g" "$DEPLOYMENT_FILE"
-
-  # Atualizar image
-  sed -i "s|\(image: us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@\)[^ ]*|\1$IMAGE_DIGEST|g" "$DEPLOYMENT_FILE"
+  yq -i ".metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
+  yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
+  yq -i ".spec.template.spec.containers[0].image = \"us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME}@$IMAGE_DIGEST\"" "$DEPLOYMENT_FILE"
 
   # Commit e push
   git config --local user.email "actions@github.com"
