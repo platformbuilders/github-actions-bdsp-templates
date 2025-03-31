@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
