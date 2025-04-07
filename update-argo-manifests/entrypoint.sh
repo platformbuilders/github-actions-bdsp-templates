@@ -97,6 +97,12 @@ elif [[ "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" =~ ^release/ || "$
 
   echo "Arquivo de deployment encontrado: $DEPLOYMENT_FILE"
 
+  if [[ "$GITHUB_REF_NAME" =~ ^release/ ]]; then
+    GITHUB_REF_NAME="release"
+  else
+    GITHUB_REF_NAME="$GITHUB_REF_NAME"
+  fi
+
   # Atualizar o arquivo YAML
   yq -i ".metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
   yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$DEPLOYMENT_FILE"
