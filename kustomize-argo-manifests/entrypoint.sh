@@ -64,7 +64,7 @@ yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_
 # Update image in kustomization
 (
   cd "$OVERLAY_PATH"
-  kustomize edit set image "IMAGE=${REPOSITORY_URI_BRANCH}@sha256:${IMAGE_DIGEST}"
+  kustomize edit set image "IMAGE=${REPOSITORY_URI_BRANCH}@${IMAGE_DIGEST}"
 )
 
 # Git commit
