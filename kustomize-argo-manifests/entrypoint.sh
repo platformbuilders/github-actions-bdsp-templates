@@ -117,8 +117,8 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
     echo "A PR already exists from branch ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH} (PR #${EXISTING_PR}) in the manifests repo."
   else
     echo "Creating Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
-    PR_TITLE="Deploy ${REPOSITORY_NAME} ${IMAGE_TAG} to Production"
-    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}.\n\nUpdate production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}).\n\nReady for review and merge to deploy to production."
+    PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
+    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
 
     gh pr create --repo "$ARGO_MANIFESTS_REPO_SLUG" \
                  --title "$PR_TITLE" \
