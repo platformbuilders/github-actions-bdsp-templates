@@ -31,6 +31,25 @@ else
   exit 0
 fi
 
+echo "Target Overlay Directory: overlays/${TARGET_OVERLAY_DIR}"
+echo "Target Manifest Branch (Initial Checkout): ${TARGET_MANIFEST_BRANCH}"
+echo "Is Production Flow (Isolated PR): ${IS_PROD_FLOW}"
+
+if [[ "$GITHUB_REF_NAME" == "staging" ]]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging"
+elif [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master"
+elif [[ "$GITHUB_REF_NAME" == "develop" ]]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop"
+elif [[ "$GITHUB_REF_NAME" =~ ^release/ ]]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release"
+elif [[ "$GITHUB_REF_NAME" == "homolog" ]]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/homolog"
+else
+  echo "Branch not supported: $GITHUB_REF_NAME"
+  exit 1
+fi
+
 git clone https://${GITHUB_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git ${ARGO_MANIFESTS_REPO_DIR}
 cd ${ARGO_MANIFESTS_REPO_DIR}
 
@@ -60,11 +79,7 @@ KUSTOMIZATION_FILE="${OVERLAY_PATH}/kustomization.yaml"
 
 yq -i ".metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$PATCH_FILE"
 yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$PATCH_FILE"
-
-IMAGE_NAME_IN_KUSTOMIZATION="IMAGE"
-CURRENT_NEW_IMAGE_NAME=$(yq e ".images[] | select(.name == \"${IMAGE_NAME_IN_KUSTOMIZATION}\") | .newName" "$KUSTOMIZATION_FILE")
-
-IMAGE_UPDATE_STRING="${IMAGE_NAME_IN_KUSTOMIZATION}=${CURRENT_NEW_IMAGE_NAME}@sha256:${IMAGE_DIGEST}"
+IMAGE_UPDATE_STRING="IMAGE=${REPOSITORY_URI_BRANCH}@sha256:${IMAGE_DIGEST}"
 kustomize edit set image "${IMAGE_UPDATE_STRING}" --kustomization "$KUSTOMIZATION_FILE"
 
 git config --local user.email "actions@github.com"
