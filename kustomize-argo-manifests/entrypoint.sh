@@ -7,7 +7,8 @@ IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME="$4"
 
-ARGO_MANIFESTS_REPO_SLUG="platformbuilders/pnb-pefisa-gitops-manifets"
+
+ARGO_MANIFESTS_REPO_SLUG="github.com/platformbuilders/pnb-pefisa-gitops-manifets"
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 
 TARGET_OVERLAY_DIR=""
