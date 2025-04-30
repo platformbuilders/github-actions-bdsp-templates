@@ -54,10 +54,10 @@ else
 fi
 
 OVERLAY_PATH="k8s/${REPOSITORY_NAME}/overlays/${TARGET_OVERLAY_DIR}"
-PATCH_FILE="${OVERLAY_PATH}/deployment-patch.yml"
+PATCH_FILE="${OVERLAY_PATH}/deployment-patch.yaml"
 KUSTOMIZATION_FILE="${OVERLAY_PATH}/kustomization.yaml"
 
-# Update deployment-patch.yml
+# Update deployment-patch.yaml
 yq -i ".metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$PATCH_FILE"
 yq -i ".spec.template.metadata.labels.\"tags.datadoghq.com/version\" = \"$IMAGE_TAG\"" "$PATCH_FILE"
 
