@@ -10,6 +10,7 @@ REPOSITORY_NAME="$4"
 
 ARGO_MANIFESTS_REPO_SLUG="github.com/platformbuilders/pnb-pefisa-gitops-manifets"
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
+REPOSITORY_NAME=$(basename "$REPOSITORY_NAME")
 
 TARGET_OVERLAY_DIR=""
 TARGET_MANIFEST_BRANCH=""
