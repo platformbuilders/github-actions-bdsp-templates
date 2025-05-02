@@ -49,7 +49,7 @@ on:
 
 
 env:
-  JAVA_VERSION: ${{ inputs..java_version }}
+  JAVA_VERSION: ${{ inputs.java_version }}
   SONAR_LANGUAGE: "java"
   SONAR_MAIN_BRANCH: "master"
   SONAR_VISIBILITY: "private"
@@ -71,7 +71,7 @@ jobs:
 
   CI:
     needs: Notify_Start
-    if: ${{ !inputs..is_production_branch }}
+    if: ${{ !inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
@@ -82,7 +82,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs..git_ref }}
+          ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
       - name: Run Secret Scanner
@@ -228,7 +228,7 @@ jobs:
 
   CD:
     needs: CI
-    if: ${{ !inputs..is_production_branch && success() }}
+    if: ${{ !inputs.is_production_branch && success() }}
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
@@ -261,7 +261,7 @@ jobs:
   CI_PRD:
     needs: Notify_Start
     
-    if: ${{ inputs..is_production_branch }}
+    if: ${{ inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
       IMAGE_TAG: ${{ steps.get_image.outputs.IMAGE_TAG }}
@@ -270,7 +270,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs..git_ref }}
+          ref: ${{ inputs.git_ref }}
 
       - name: Get image to GCR
         id: get_image
@@ -288,7 +288,7 @@ jobs:
 
   CD_PRD:
     needs: CI_PRD
-    if: ${{ inputs..is_production_branch && success() }}
+    if: ${{ inputs.is_production_branch && success() }}
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
