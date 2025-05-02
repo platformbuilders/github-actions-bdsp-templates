@@ -1,0 +1,221 @@
+name: maven-ci-cd-package
+
+on:
+  workflow_call:
+    description: 'Pipeline de CI/CD teste para aplicações Maven'
+
+    inputs.:
+      java_version:
+        description: 'Versão do Java a ser usada'
+        required: true
+        type: string
+      git_ref:
+        description: 'A referência do Git (branch, tag, SHA) a ser buildada/deployada'
+        required: true
+        type: string
+      is_production_branch:
+        description: 'Indica se a execução é para uma branch de produção (master/main)'
+        required: true
+        type: boolean
+      SONAR_BDSP_HOST_URL:
+        description: 'URL do host do SonarQube'
+        required: false
+        type: string
+
+    secrets:
+      SLACK_WEBHOOK_URL:
+        description: 'Webhook URL do Slack para notificações'
+        required: true
+      SONAR_BDSP_TOKEN:
+        description: 'Token de acesso ao SonarQube'
+        required: true
+      GCP_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account GCP'
+        required: true
+      TOKEN_GITHUB:
+        description: 'Token do GitHub para automação'
+        required: true
+
+    outputs:
+      IMAGE_TAG:
+        description: "Tag da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST:
+        description: "Digest da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_DIGEST }}
+      IMAGE_URI:
+        description: "URI completa da imagem Docker"
+        value: ${{ jobs.CI.outputs.IMAGE_URI }}
+
+
+env:
+  JAVA_VERSION: ${{ inputs..java_version }}
+  SONAR_LANGUAGE: "java"
+  SONAR_MAIN_BRANCH: "master"
+  SONAR_VISIBILITY: "private"
+  SONAR_QUALITY_PROFILE: "Sonar way"
+  SONAR_QUALITY_GATE: "QG_PNB_BACKEND"
+  SONAR_PERMISSION_TEMPLATE: "PNB-TEMPLATE"
+  SONAR_NEW_CODE_DEF_TYPE: "PREVIOUS_VERSION"
+
+jobs:
+
+  Notify_Start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Notify Slack: Start"
+        uses: ./slack-notify@main
+        with:
+          type: "start"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  CI:
+    needs: Notify_Start
+    if: ${{ !inputs..is_production_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
+      IMAGE_URI: ${{ steps.build_push.outputs.IMAGE_URI }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs..git_ref }}
+          fetch-depth: 0
+
+      - name: Run Secret Scanner
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: >
+            --log-level=2
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '${{ env.JAVA_VERSION }}'
+
+      - name: Build and Test with Maven
+        run: |
+          mvn clean package -DskipTests
+
+      - name: Build and Push Docker image to GCR
+        id: build_push
+        uses: ./build-push-image@main
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Run Image Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
+          format: 'table'
+          output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+          exit-code: '0'
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Image Vulnerability Scanner Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
+          path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+          retention-days: 3
+
+  
+      - name: "Notify Slack: Failure (CI)"
+        if: ${{ failure() }}
+        uses: ./slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  CD:
+    needs: CI
+    if: ${{ !inputs..is_production_branch && success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kustomize Argo Manifests
+        uses: ./kustomize-argo-manifests@main
+        with:
+          image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
+          image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          repository-name: ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+
+     
+      - name: "Notify Slack: Success (CI/CD Non-Prod)"
+        if: ${{ success() }}
+        uses: ./slack-notify@main
+        with:
+          type: "success"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+     
+      - name: "Notify Slack: Failure (CD)"
+        if: ${{ failure() }}
+        uses: ./slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+  CI_PRD:
+    needs: Notify_Start
+    
+    if: ${{ inputs..is_production_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.get_image.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST: ${{ steps.get_image.outputs.IMAGE_DIGEST }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs..git_ref }}
+
+      - name: Get image to GCR
+        id: get_image
+        uses: ./build-push-image@main
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: "Notify Slack: Failure (CI_PRD)"
+        if: ${{ failure() }}
+        uses: ./slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+  CD_PRD:
+    needs: CI_PRD
+    if: ${{ inputs..is_production_branch && success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kustomize Argo Manifests
+        uses: ./kustomize-argo-manifests@main
+        with:
+          image-tag: ${{ needs.CI_PRD.outputs.IMAGE_TAG }}
+          image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          repository-name: ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: "Notify Slack: Success (CI/CD PRD)"
+        if: ${{ success() }}
+        uses: ./slack-notify@main
+        with:
+          type: "success"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: "Notify Slack: Failure (CD_PRD)"
+        if: ${{ failure() }}
+        uses: ./slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
