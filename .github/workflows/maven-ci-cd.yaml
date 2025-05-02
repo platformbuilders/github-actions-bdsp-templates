@@ -2,9 +2,9 @@ name: maven-ci-cd-package
 
 on:
   workflow_call:
-    description: 'Pipeline de CI/CD padrão para aplicações Maven que utilizam packages/bibliotecas, incluindo build, testes, SonarQube e scan de imagem.'
+    # Pipeline de CI/CD padrão para aplicações Maven que utilizam packages/bibliotecas, incluindo build, testes, SonarQube e scan de imagem.
 
-    inputs.:
+    inputs:
       java_version:
         description: 'Versão do Java a ser usada'
         required: true

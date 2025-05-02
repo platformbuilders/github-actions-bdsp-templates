@@ -2,9 +2,9 @@ name: maven-ci-cd-package
 
 on:
   workflow_call:
-    description: 'Pipeline de CI/CD teste para aplicações Maven'
+    # Pipeline de CI/CD teste para aplicações Maven
 
-    inputs.:
+    inputs:
       java_version:
         description: 'Versão do Java a ser usada'
         required: true
