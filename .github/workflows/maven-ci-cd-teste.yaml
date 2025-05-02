@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Notify Slack: Start"
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "start"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -103,7 +103,7 @@ jobs:
 
       - name: Build and Push Docker image to GCR
         id: build_push
-        uses: ./build-push-image@main
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
@@ -126,7 +126,7 @@ jobs:
   
       - name: "Notify Slack: Failure (CI)"
         if: ${{ failure() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "failure"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
-        uses: ./kustomize-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
@@ -149,7 +149,7 @@ jobs:
      
       - name: "Notify Slack: Success (CI/CD Non-Prod)"
         if: ${{ success() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "success"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -157,7 +157,7 @@ jobs:
      
       - name: "Notify Slack: Failure (CD)"
         if: ${{ failure() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "failure"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -179,13 +179,13 @@ jobs:
 
       - name: Get image to GCR
         id: get_image
-        uses: ./build-push-image@main
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
       - name: "Notify Slack: Failure (CI_PRD)"
         if: ${{ failure() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "failure"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
-        uses: ./kustomize-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
         with:
           image-tag: ${{ needs.CI_PRD.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
@@ -208,14 +208,14 @@ jobs:
 
       - name: "Notify Slack: Success (CI/CD PRD)"
         if: ${{ success() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "success"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: "Notify Slack: Failure (CD_PRD)"
         if: ${{ failure() }}
-        uses: ./slack-notify@main
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
         with:
           type: "failure"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
