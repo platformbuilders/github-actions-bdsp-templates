@@ -72,7 +72,7 @@ jobs:
   CI:
     needs: Notify_Start
     if: ${{ !inputs.is_production_branch }}
-    runs-on: ubuntu-latest
+    runs-on: runner-pb-pefisa
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
       IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
