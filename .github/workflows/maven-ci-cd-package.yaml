@@ -99,7 +99,7 @@ jobs:
 
       - name: Build and Test with Maven
         run: |
-          mvn clean package dependency:copy-dependencies -DoutputDirectory=platformbuilders/github-actions-bdsp-templates/lib -B -s platformbuilders/github-actions-bdsp-templates/settings.xml
+          mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib -B -s ./settings.xml
 
       - name: Check project existence in SonarQube
         id: checkSonarProjectExistence
@@ -189,7 +189,7 @@ jobs:
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.language=java
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.java.libraries=platformbuilders/github-actions-bdsp-templates/lib
+            -Dsonar.java.libraries=./lib
 
       - name: SonarQube Quality Gate check
         uses: sonarsource/sonarqube-quality-gate-action@master

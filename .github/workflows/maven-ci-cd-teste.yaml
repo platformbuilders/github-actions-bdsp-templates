@@ -1,4 +1,4 @@
-name: maven-ci-cd-package
+name: maven-ci-cd
 
 on:
   workflow_call:
