@@ -97,7 +97,6 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
       echo "Detectado projeto frontend. Realizando build e push..."
       docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
-      docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
       docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" | cut -d '@' -f 2)
@@ -131,7 +130,6 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
 
 else
   docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
-  docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
   docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
   echo "Build e push realizado para $GITHUB_REF_NAME"
