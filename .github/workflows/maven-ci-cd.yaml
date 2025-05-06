@@ -71,7 +71,7 @@ jobs:
 
   CI-Code-Quality:
     if: ${{ !inputs.is_production_branch }}
-    uses: platformbuilders/github-actions-bdsp-templates/.github/workflows/code-quality@perf/improve-performance
+    uses: platformbuilders/github-actions-bdsp-templates/.github/workflows/code-quality.yaml@perf/improve-performance
     with:
       git_ref: ${{ github.ref }}
       SONAR_BDSP_HOST_URL: ${{ secrets.SONAR_BDSP_HOST_URL }}
