@@ -29,7 +29,7 @@ env:
 
 jobs:
   Code-Quality:
-    runs-on: pb-pefisa-runner
+    runs-on: runner-pb-pefisa
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
