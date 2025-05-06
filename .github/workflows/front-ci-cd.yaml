@@ -126,7 +126,7 @@ jobs:
 
       - name: Install dependencies and run tests
         run: |
-          yarn install --frozen-lockfile
+          yarn install
           yarn test:coverage
           
       - name: Build and Push Docker image to GCR
