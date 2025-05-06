@@ -101,13 +101,12 @@ jobs:
 
           SECRET_NAME="${GITHUB_REPOSITORY_NAME}${SECRET_SUFFIX}"
           ENV_FILE=".env"
+          GCP_SECRET_PROJECT="vault-psd"
 
-          echo "Fetching secret '$SECRET_NAME' for branch '$BRANCH_NAME' and creating $ENV_FILE..."
+          echo "Fetching secret '$SECRET_NAME' from project '$GCP_SECRET_PROJECT' for branch '$BRANCH_NAME' and creating $ENV_FILE..."
 
-          gcloud secrets versions access latest --secret="$SECRET_NAME" --format=json \
-          | jq -r '.payload.data' \
-          | base64 -d \
-          | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' > "$ENV_FILE"
+          gcloud secrets versions access latest --secret="$SECRET_NAME" --project="$GCP_SECRET_PROJECT" \
+          | jq -r 'to_entries[] | "\(.key)=\(.value)"' > "$ENV_FILE"
 
           if [ -s "$ENV_FILE" ]; then
               echo "$ENV_FILE created successfully."
