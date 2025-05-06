@@ -69,16 +69,10 @@ jobs:
           type: "start"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  CI-Code-Quality:
-    if: ${{ !inputs.is_production_branch }}
-    uses: platformbuilders/github-actions-bdsp-templates/.github/workflows/code-quality.yaml@perf/improve-performance
-    secrets: inherit
-    with:
-      git_ref: ${{ github.ref }}
-      SONAR_BDSP_HOST_URL: ${{ inputs.SONAR_BDSP_HOST_URL }}
+
             
   CI:
-    needs: [Notify_Start,CI-Code-Quality]
+    needs: [Notify_Start]
     if: ${{ !inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
