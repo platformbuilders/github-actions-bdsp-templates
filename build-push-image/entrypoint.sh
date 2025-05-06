@@ -54,7 +54,6 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
       echo "Branch master/main detectada para projeto frontend. Realizando build e push..."
       docker build -t "$REPOSITORY_URI_PRD":"$SHORT_SHA" .
-      docker tag "$REPOSITORY_URI_PRD":"$SHORT_SHA"
       docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_PRD":"$SHORT_SHA" | cut -d '@' -f 2)

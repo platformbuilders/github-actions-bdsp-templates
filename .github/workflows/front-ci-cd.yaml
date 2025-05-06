@@ -124,10 +124,14 @@ jobs:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'yarn'
 
-      - name: Install dependencies and run tests
-        run: |
-          yarn install
-          yarn test:coverage
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests and collect coverage
+        run: yarn test:coverage
+
+      - name: Build Application Artifact
+        run: yarn build
           
       - name: Build and Push Docker image to GCR
         id: build_push
