@@ -132,3 +132,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
 
+      - name: "Notify Slack: Failure (CI)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
