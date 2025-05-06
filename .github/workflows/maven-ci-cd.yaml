@@ -1,24 +1,55 @@
-name: code-quality
+name: maven-ci-cd
 
 on:
   workflow_call:
-    # code quality em flow separado pois necessita rodar em runner especifico.
+    # Pipeline de CI/CD padrão para aplicações Maven, incluindo build, testes, SonarQube e scan de imagem.
 
     inputs:
+      java_version:
+        description: 'Versão do Java a ser usada'
+        required: true
+        type: string
       git_ref:
         description: 'A referência do Git (branch, tag, SHA) a ser buildada/deployada'
         required: true
         type: string
+      is_production_branch:
+        description: 'Indica se a execução é para uma branch de produção (master/main)'
+        required: true
+        type: boolean
       SONAR_BDSP_HOST_URL:
         description: 'URL do host do SonarQube'
         required: true
         type: string
 
     secrets:
+      SLACK_WEBHOOK_URL:
+        description: 'Webhook URL do Slack para notificações'
+        required: true
       SONAR_BDSP_TOKEN:
         description: 'Token de acesso ao SonarQube'
         required: true
+      GCP_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account GCP'
+        required: true
+      TOKEN_GITHUB:
+        description: 'Token do GitHub para automação'
+        required: true
+
+    outputs:
+      IMAGE_TAG:
+        description: "Tag da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST:
+        description: "Digest da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_DIGEST }}
+      IMAGE_URI:
+        description: "URI completa da imagem Docker"
+        value: ${{ jobs.CI.outputs.IMAGE_URI }}
+
+
 env:
+  JAVA_VERSION: ${{ inputs.java_version }}
   SONAR_LANGUAGE: "java"
   SONAR_MAIN_BRANCH: "master"
   SONAR_VISIBILITY: "private"
@@ -28,8 +59,33 @@ env:
   SONAR_NEW_CODE_DEF_TYPE: "PREVIOUS_VERSION"
 
 jobs:
-  Code-Quality:
-    runs-on: pb-pefisa-runner
+
+  Notify_Start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Notify Slack: Start"
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "start"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  CI-Code-Quality:
+    if: ${{ !inputs.is_production_branch }}
+    uses: sua-org/seu-repo-reutilizavel/.github/workflows/code-quality.yml@main
+    with:
+      git_ref: ${{ github.ref }}
+      SONAR_BDSP_HOST_URL: ${{ secrets.SONAR_BDSP_HOST_URL }}
+      SONAR_BDSP_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
+        
+  CI:
+    needs: [Notify_Start,CI-Code-Quality]
+    if: ${{ !inputs.is_production_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
+      IMAGE_URI: ${{ steps.build_push.outputs.IMAGE_URI }}
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,98 +93,137 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
-      - name: Check project existence in SonarQube
-        id: checkSonarProjectExistence
-        run: |
-          set -e
-          echo "Verificando se o projeto existe no SonarQube..."
-
-          RESPONSE=$(curl --verbose --fail --location \
-            "${{ inputs.SONAR_BDSP_HOST_URL }}/api/projects/search?projects=${{ github.event.repository.name }}" \
-            --header "Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}")
-
-          echo "$RESPONSE"
-
-          FOUND_PROJECTS=$(echo "$RESPONSE" | jq -r '.paging.total' 2>/dev/null || echo "0")
-
-          echo "FOUND_PROJECTS: $FOUND_PROJECTS"
-
-          if [[ "$FOUND_PROJECTS" =~ ^[0-9]+$ && "$FOUND_PROJECTS" -eq 0 ]]; then
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Creating new project on SonarQube
-        if: steps.checkSonarProjectExistence.outputs.exists == 'false'
-        run: |
-          set -e
-          echo "Criando projeto no SonarQube..."
-          curl -f --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/projects/create' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
-          --header 'Content-Type: application/x-www-form-urlencoded' \
-          --data-urlencode 'project=${{ github.event.repository.name }}' \
-          --data-urlencode 'name=${{ github.event.repository.name }}' \
-          --data-urlencode 'mainBranch=${{env.SONAR_MAIN_BRANCH}}' \
-          --data-urlencode 'newCodeDefinitionType=${{env.SONAR_NEW_CODE_DEF_TYPE}}' \
-          --data-urlencode 'visibility=${{env.SONAR_VISIBILITY}}'
-
-      - name: Configuring quality gate
-        if: steps.checkSonarProjectExistence.outputs.exists == 'false'
-        run: |
-          set -e
-          echo "Atribuindo Quality Gate ao projeto..."
-          curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/qualitygates/select' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
-          --header 'Content-Type: application/x-www-form-urlencoded' \
-          --data-urlencode 'gateName=${{env.SONAR_QUALITY_GATE}}' \
-          --data-urlencode 'projectKey=${{ github.event.repository.name }}'
-
-      - name: Configuring quality profile
-        if: steps.checkSonarProjectExistence.outputs.exists == 'false'
-        run: |
-          set -e
-          echo "Atribuindo Quality Profile..."
-          curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/qualityprofiles/add_project' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
-          --header 'Content-Type: application/x-www-form-urlencoded' \
-          --data-urlencode 'language=${{env.SONAR_LANGUAGE}}' \
-          --data-urlencode 'qualityProfile=${{env.SONAR_QUALITY_PROFILE}}' \
-          --data-urlencode 'project=${{ github.event.repository.name }}'
-
-      - name: Applying template permission
-        if: steps.checkSonarProjectExistence.outputs.exists == 'false'
-        run: |
-          set -e
-          echo "Atribuindo Permission Template..."
-          curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/permissions/apply_template' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
-          --header 'Content-Type: application/x-www-form-urlencoded' \
-          --data-urlencode 'projectKey=${{ github.event.repository.name }}' \
-          --data-urlencode 'templateName=${{env.SONAR_PERMISSION_TEMPLATE}}'
-
-      - name: Get project version
-        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_HOST_URL: ${{ inputs.SONAR_BDSP_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
+      - name: Run Secret Scanner
+        uses: trufflesecurity/trufflehog@main
         with:
-          args: >-
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
-            -Dsonar.sources=src/main/java
-            -Dsonar.tests=src/test/java
-            -Dsonar.java.binaries=target/classes
-            -Dsonar.sourceEncoding=UTF-8
-            -Dsonar.language=java
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.java.libraries=./lib
+          extra_args: >
+            --log-level=2
 
-      - name: SonarQube Quality Gate check
-        uses: sonarsource/sonarqube-quality-gate-action@master
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '${{ env.JAVA_VERSION }}'
+
+      - name: Build and Test with Maven
+        run: |
+          mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib
+
+      - name: Build and Push Docker image to GCR
+        id: build_push
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+      - name: Run Image Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
+          format: 'table'
+          output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+          exit-code: '0'
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Image Vulnerability Scanner Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
+          path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+          retention-days: 3
+
+  
+      - name: "Notify Slack: Failure (CI)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  CD:
+    needs: CI
+    if: ${{ !inputs.is_production_branch && success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kustomize Argo Manifests
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
+        with:
+          image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
+          image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          repository-name: ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+
+     
+      - name: "Notify Slack: Success (CI/CD Non-Prod)"
+        if: ${{ success() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "success"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+     
+      - name: "Notify Slack: Failure (CD)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+  CI_PRD:
+    needs: Notify_Start
+    
+    if: ${{ inputs.is_production_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.get_image.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST: ${{ steps.get_image.outputs.IMAGE_DIGEST }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - name: Get image to GCR
+        id: get_image
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: "Notify Slack: Failure (CI_PRD)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+  CD_PRD:
+    needs: CI_PRD
+    if: ${{ inputs.is_production_branch && success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kustomize Argo Manifests
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
+        with:
+          image-tag: ${{ needs.CI_PRD.outputs.IMAGE_TAG }}
+          image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          repository-name: ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: "Notify Slack: Success (CI/CD PRD)"
+        if: ${{ success() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "success"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: "Notify Slack: Failure (CD_PRD)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
