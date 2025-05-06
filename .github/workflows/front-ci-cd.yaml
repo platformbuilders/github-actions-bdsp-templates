@@ -89,6 +89,7 @@ jobs:
           set -e
 
           BRANCH_NAME="${GITHUB_REF_NAME}"
+          REPO_NAME=$(basename "$GITHUB_REPOSITORY")
 
           SECRET_SUFFIX=""
           if [[ "$BRANCH_NAME" == "master" || "$BRANCH_NAME" == "main" ]]; then
@@ -99,7 +100,7 @@ jobs:
             SECRET_SUFFIX="-sec-hml"
           fi
 
-          SECRET_NAME="${GITHUB_REPOSITORY_NAME}${SECRET_SUFFIX}"
+          SECRET_NAME="${REPO_NAME}${SECRET_SUFFIX}"
           ENV_FILE=".env"
           GCP_SECRET_PROJECT="vault-psd"
 
