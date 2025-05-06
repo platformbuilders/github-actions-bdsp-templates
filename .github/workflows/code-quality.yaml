@@ -13,8 +13,6 @@ on:
         description: 'URL do host do SonarQube'
         required: true
         type: string
-
-    secrets:
       SONAR_BDSP_TOKEN:
         description: 'Token de acesso ao SonarQube'
         required: true
@@ -45,7 +43,7 @@ jobs:
 
           RESPONSE=$(curl --verbose --fail --location \
             "${{ inputs.SONAR_BDSP_HOST_URL }}/api/projects/search?projects=${{ github.event.repository.name }}" \
-            --header "Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}")
+            --header "Authorization: Bearer ${{ inputs.SONAR_BDSP_TOKEN }}")
 
           echo "$RESPONSE"
 
@@ -65,7 +63,7 @@ jobs:
           set -e
           echo "Criando projeto no SonarQube..."
           curl -f --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/projects/create' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
+          --header 'Authorization: Bearer ${{ inputs.SONAR_BDSP_TOKEN }}' \
           --header 'Content-Type: application/x-www-form-urlencoded' \
           --data-urlencode 'project=${{ github.event.repository.name }}' \
           --data-urlencode 'name=${{ github.event.repository.name }}' \
@@ -79,7 +77,7 @@ jobs:
           set -e
           echo "Atribuindo Quality Gate ao projeto..."
           curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/qualitygates/select' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
+          --header 'Authorization: Bearer ${{ inputs.SONAR_BDSP_TOKEN }}' \
           --header 'Content-Type: application/x-www-form-urlencoded' \
           --data-urlencode 'gateName=${{env.SONAR_QUALITY_GATE}}' \
           --data-urlencode 'projectKey=${{ github.event.repository.name }}'
@@ -90,7 +88,7 @@ jobs:
           set -e
           echo "Atribuindo Quality Profile..."
           curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/qualityprofiles/add_project' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
+          --header 'Authorization: Bearer ${{ inputs.SONAR_BDSP_TOKEN }}' \
           --header 'Content-Type: application/x-www-form-urlencoded' \
           --data-urlencode 'language=${{env.SONAR_LANGUAGE}}' \
           --data-urlencode 'qualityProfile=${{env.SONAR_QUALITY_PROFILE}}' \
@@ -102,7 +100,7 @@ jobs:
           set -e
           echo "Atribuindo Permission Template..."
           curl --location '${{ inputs.SONAR_BDSP_HOST_URL }}/api/permissions/apply_template' \
-          --header 'Authorization: Bearer ${{ secrets.SONAR_BDSP_TOKEN }}' \
+          --header 'Authorization: Bearer ${{ inputs.SONAR_BDSP_TOKEN }}' \
           --header 'Content-Type: application/x-www-form-urlencoded' \
           --data-urlencode 'projectKey=${{ github.event.repository.name }}' \
           --data-urlencode 'templateName=${{env.SONAR_PERMISSION_TEMPLATE}}'
@@ -114,7 +112,7 @@ jobs:
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_HOST_URL: ${{ inputs.SONAR_BDSP_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
+          SONAR_TOKEN: ${{ inputs.SONAR_BDSP_TOKEN }}
         with:
           args: >-
             -Dsonar.projectKey=${{ github.event.repository.name }}
@@ -130,6 +128,6 @@ jobs:
       - name: SonarQube Quality Gate check
         uses: sonarsource/sonarqube-quality-gate-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
+          SONAR_TOKEN: ${{ inputs.SONAR_BDSP_TOKEN }}
 
 
