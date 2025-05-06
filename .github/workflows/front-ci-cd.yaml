@@ -1,4 +1,4 @@
-name: maven-ci-cd
+name: front-ci-cd
 
 on:
   workflow_call:
@@ -78,6 +78,45 @@ jobs:
         with:
           extra_args: >
             --log-level=2
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Fetch Secret Manager secrets and create .env file
+        run: |
+          set -e
+
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+
+          SECRET_SUFFIX=""
+          if [[ "$BRANCH_NAME" == "master" || "$BRANCH_NAME" == "main" ]]; then
+            SECRET_SUFFIX="-sec-prd"
+          elif [[ "$BRANCH_NAME" == "develop" ]]; then
+            SECRET_SUFFIX="-sec-dev"
+          else
+            SECRET_SUFFIX="-sec-hml"
+          fi
+
+          SECRET_NAME="${GITHUB_REPOSITORY_NAME}${SECRET_SUFFIX}"
+          ENV_FILE=".env"
+
+          echo "Fetching secret '$SECRET_NAME' for branch '$BRANCH_NAME' and creating $ENV_FILE..."
+
+          gcloud secrets versions access latest --secret="$SECRET_NAME" --format=json \
+          | jq -r '.payload.data' \
+          | base64 -d \
+          | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' > "$ENV_FILE"
+
+          if [ -s "$ENV_FILE" ]; then
+              echo "$ENV_FILE created successfully."
+          else
+              echo "Error: Failed to create $ENV_FILE or it is empty."
+              exit 1
+          fi
+
+          echo "Secret fetching and .env creation finished."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
