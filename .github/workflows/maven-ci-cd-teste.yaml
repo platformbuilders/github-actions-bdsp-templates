@@ -60,17 +60,9 @@ env:
 
 jobs:
 
-  Notify_Start:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Notify Slack: Start"
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "start"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
 
   CI:
-    needs: Notify_Start
     if: ${{ !inputs.is_production_branch }}
     runs-on: runner-pb-pefisa
     outputs:
@@ -123,99 +115,3 @@ jobs:
           path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
           retention-days: 3
 
-  
-      - name: "Notify Slack: Failure (CI)"
-        if: ${{ failure() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "failure"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  CD:
-    needs: CI
-    if: ${{ !inputs.is_production_branch && success() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
-        with:
-          image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
-          image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
-          github-token: ${{ secrets.TOKEN_GITHUB }}
-          repository-name: ${{ github.repository }}
-        env:
-          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-
-     
-      - name: "Notify Slack: Success (CI/CD Non-Prod)"
-        if: ${{ success() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "success"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-     
-      - name: "Notify Slack: Failure (CD)"
-        if: ${{ failure() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "failure"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-
-  CI_PRD:
-    needs: Notify_Start
-    
-    if: ${{ inputs.is_production_branch }}
-    runs-on: ubuntu-latest
-    outputs:
-      IMAGE_TAG: ${{ steps.get_image.outputs.IMAGE_TAG }}
-      IMAGE_DIGEST: ${{ steps.get_image.outputs.IMAGE_DIGEST }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.git_ref }}
-
-      - name: Get image to GCR
-        id: get_image
-        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
-        env:
-          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
-      - name: "Notify Slack: Failure (CI_PRD)"
-        if: ${{ failure() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "failure"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-
-  CD_PRD:
-    needs: CI_PRD
-    if: ${{ inputs.is_production_branch && success() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
-        with:
-          image-tag: ${{ needs.CI_PRD.outputs.IMAGE_TAG }}
-          image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
-          github-token: ${{ secrets.TOKEN_GITHUB }}
-          repository-name: ${{ github.repository }}
-        env:
-          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-
-      - name: "Notify Slack: Success (CI/CD PRD)"
-        if: ${{ success() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "success"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: "Notify Slack: Failure (CD_PRD)"
-        if: ${{ failure() }}
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "failure"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
