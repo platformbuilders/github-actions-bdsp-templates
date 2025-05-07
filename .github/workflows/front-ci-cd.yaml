@@ -9,6 +9,10 @@ on:
         description: 'Versão do Node a ser usada'
         required: true
         type: string
+      gcp_project:
+        description: 'Nome do projeto GCP'
+        required: true
+        type: string
       git_ref:
         description: 'A referência do Git (branch, tag, SHA) a ser buildada/deployada'
         required: true
@@ -102,7 +106,7 @@ jobs:
 
           SECRET_NAME="${REPO_NAME}${SECRET_SUFFIX}"
           ENV_FILE=".env"
-          GCP_SECRET_PROJECT="vault-psd"
+          GCP_SECRET_PROJECT= ${{ inputs.gcp_project }}
 
           echo "Fetching secret '$SECRET_NAME' from project '$GCP_SECRET_PROJECT' for branch '$BRANCH_NAME' and creating $ENV_FILE..."
 
