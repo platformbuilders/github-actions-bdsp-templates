@@ -139,7 +139,7 @@ jobs:
           
       - name: Build and Push Docker image to GCR
         id: build_push
-        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@dev
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           PROJECT_TYPE: frontend 
