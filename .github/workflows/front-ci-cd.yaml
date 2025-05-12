@@ -115,6 +115,22 @@ jobs:
 
           if [ -s "$ENV_FILE" ]; then
               echo "$ENV_FILE created successfully."
+
+              echo "Displaying .env content with masked values"
+              while IFS='=' read -r key val || [[ -n "$key" ]]; do
+                  if [[ -z "$key" ]] || [[ "$key" == \#* ]]; then 
+                    continue
+                  fi
+            
+                  if [ ${#val} -gt 7 ]; then 
+                      first_chars="${val:0:3}"  
+                      last_chars="${val: -3}" 
+                      echo "${key}=${first_chars}...${last_chars}"
+                  else
+                    echo "${key}=${val}"
+                  fi
+              done < "$ENV_FILE"
+
           else
               echo "Error: Failed to create $ENV_FILE or it is empty."
               exit 1
