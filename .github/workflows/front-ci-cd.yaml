@@ -108,14 +108,7 @@ jobs:
           ENV_FILE=".env"
           GCP_SECRET_PROJECT="${{ inputs.gcp_project }}"
 
-          echo "Checking if secret '$SECRET_NAME' exists in project '$GCP_SECRET_PROJECT'..."
-
-          if ! gcloud secrets describe "$SECRET_NAME" --project="$GCP_SECRET_PROJECT" > /dev/null 2>&1; then
-            echo "Secret '$SECRET_NAME' not found in project '$GCP_SECRET_PROJECT'. Skipping .env creation."
-            exit 0
-          fi
-
-          echo "Secret found. Fetching and creating $ENV_FILE..."
+          echo "Fetching and creating $ENV_FILE..."
 
           gcloud secrets versions access latest --secret="$SECRET_NAME" --project="$GCP_SECRET_PROJECT" \
           | jq -r 'to_entries[] | "\(.key)=\(.value)"' > "$ENV_FILE"
