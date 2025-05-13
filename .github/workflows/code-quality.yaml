@@ -13,7 +13,12 @@ on:
         description: 'URL do host do SonarQube'
         required: true
         type: string
-
+      java_version:
+        description: 'Versão do Java a ser usada'
+        required: true
+        type: string
+       
+     
     secrets:
       SONAR_BDSP_TOKEN:
         description: 'Token de acesso ao SonarQube'
@@ -26,6 +31,7 @@ env:
   SONAR_QUALITY_GATE: "QG_PNB_BACKEND"
   SONAR_PERMISSION_TEMPLATE: "PNB-TEMPLATE"
   SONAR_NEW_CODE_DEF_TYPE: "PREVIOUS_VERSION"
+  JAVA_VERSION: ${{ inputs.java_version }}
 
 jobs:
   Code-Quality:
