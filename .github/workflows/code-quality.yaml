@@ -37,6 +37,10 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
+      - name: Build and Test with Maven
+        run: |
+          mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib
+          
       - name: Check project existence in SonarQube
         id: checkSonarProjectExistence
         run: |
