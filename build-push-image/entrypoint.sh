@@ -54,6 +54,16 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
       echo "Branch master/main detectada para projeto frontend. Realizando build e push..."
       docker build -t "$REPOSITORY_URI_PRD":"$SHORT_SHA" .
+
+      TAG_EXISTS=$(gcloud artifacts docker tags list "$REPOSITORY_URI_BRANCH" \
+      --filter="tag~'$SHORT_SHA'" \
+      --format="value(tag)" 2>/dev/null || true)
+
+      if [[ -n "$TAG_EXISTS" ]]; then
+        echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
+        gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
+      fi
+
       docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_PRD":"$SHORT_SHA" | cut -d '@' -f 2)
@@ -96,6 +106,16 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
       echo "Detectado projeto frontend. Realizando build e push..."
       docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
+
+      TAG_EXISTS=$(gcloud artifacts docker tags list "$REPOSITORY_URI_BRANCH" \
+      --filter="tag~'$SHORT_SHA'" \
+      --format="value(tag)" 2>/dev/null || true)
+
+      if [[ -n "$TAG_EXISTS" ]]; then
+        echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
+        gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
+      fi
+
       docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" | cut -d '@' -f 2)
@@ -111,6 +131,16 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
 
   else
     docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
+
+    TAG_EXISTS=$(gcloud artifacts docker tags list "$REPOSITORY_URI_BRANCH" \
+    --filter="tag~'$SHORT_SHA'" \
+    --format="value(tag)" 2>/dev/null || true)
+
+    if [[ -n "$TAG_EXISTS" ]]; then
+      echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
+      gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
+    fi
+
     docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA"
     docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
     docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
@@ -129,6 +159,16 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
 
 else
   docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
+
+  TAG_EXISTS=$(gcloud artifacts docker tags list "$REPOSITORY_URI_BRANCH" \
+    --filter="tag~'$SHORT_SHA'" \
+    --format="value(tag)" 2>/dev/null || true)
+
+  if [[ -n "$TAG_EXISTS" ]]; then
+    echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
+    gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
+  fi
+
   docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
   echo "Build e push realizado para $GITHUB_REF_NAME"
