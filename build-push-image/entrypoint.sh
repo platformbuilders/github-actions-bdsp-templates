@@ -87,10 +87,10 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
         echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
         echo "Outputs definidos."
 
-  fi # <<< Fim da lógica adicionada para frontend >>>
+  fi
 
 
-# Verificar se a branch é release/*, staging ou homolog (Mantido como no original)
+# Verificar se a branch é release/*, staging ou homolog
 elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
 
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
