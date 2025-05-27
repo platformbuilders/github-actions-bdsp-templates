@@ -53,7 +53,7 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
   git reset --hard "origin/${PR_BASE_BRANCH}"
   TIMESTAMP=$(date +%s)
   TEMP_BRANCH_NAME="prod-update-${REPOSITORY_NAME}-${IMAGE_TAG}-${TIMESTAMP}"
-  TEMP_BRANCH_NAME= $(echo $TEMP_BRANCH_NAME | sed 's/://g')
+TEMP_BRANCH_NAME=$(echo $TEMP_BRANCH_NAME | sed 's/://g')
   echo "Creating temporary branch: ${TEMP_BRANCH_NAME}"
   git checkout -b "$TEMP_BRANCH_NAME"
   TARGET_PUSH_BRANCH="$TEMP_BRANCH_NAME"
