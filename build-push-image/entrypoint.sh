@@ -74,7 +74,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
   else
       LATEST_IMAGE_LINE=$(gcloud artifacts docker images list --include-tags "$REPOSITORY_URI_PRD" \
-          --sort-by=~UPDATE_TIME \
+          --sort-by=~CREATE_TIME \
           --limit=1 \
           --quiet \
           | tail -n 1)
