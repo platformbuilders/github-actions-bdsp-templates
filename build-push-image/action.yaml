@@ -2,7 +2,7 @@ name: 'Build and Push Docker Image to GCR'
 description: 'Builds and pushes a Docker image to Google Container Registry (GCR) based on the branch.'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'gcr.io/bdsp-devtools/build-push-image:latest'
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
