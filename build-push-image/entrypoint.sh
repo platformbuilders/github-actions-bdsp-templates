@@ -70,6 +70,11 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
       IMAGE_TAG="$SHORT_SHA" 
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$SHORT_SHA"
 
+      echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+      echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+      echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+      echo "Outputs definidos"
+
       echo "Build e push concluídos para frontend em $GITHUB_REF_NAME."
 
   else
