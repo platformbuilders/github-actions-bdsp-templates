@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get update \
     && apt-get install -y google-cloud-sdk \
     && rm -rf /var/lib/apt/lists/*
-
+ 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
  
