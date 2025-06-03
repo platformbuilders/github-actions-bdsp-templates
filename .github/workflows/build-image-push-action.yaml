@@ -24,10 +24,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE="ghcr.io/${{ github.repository_name }}/build-push-image:latest"
+          IMAGE="ghcr.io/${{ github.repository }}/build-push-image:latest"
           docker build -t $IMAGE ./build-push-image
 
       - name: Push Docker image to GHCR
         run: |
-          IMAGE="ghcr.io/${{ github.repository_name }}/build-push-image:latest"
+          IMAGE="ghcr.io/${{ github.repository}}/build-push-image:latest"
           docker push $IMAGE
