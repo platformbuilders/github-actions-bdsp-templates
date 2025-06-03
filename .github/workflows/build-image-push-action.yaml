@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image to GHCR
 
 on:
   push:
@@ -6,30 +6,28 @@ on:
       - 'build-push-image/**'
     branches:
       - main
- 
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Google Cloud authentication
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Configure Docker to use the Google Cloud registry
-        run: |
-          gcloud --quiet auth configure-docker
-          
       - name: Build Docker image
         run: |
-          IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID }}/build-push-image:latest"
+          IMAGE="ghcr.io/${{ github.repository_name }}/build-push-image:latest"
           docker build -t $IMAGE ./build-push-image
-          
-      - name: Push Docker image to Google Container Registry
+
+      - name: Push Docker image to GHCR
         run: |
-          IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID }}/build-push-image:latest"
+          IMAGE="ghcr.io/${{ github.repository_name }}/build-push-image:latest"
           docker push $IMAGE
