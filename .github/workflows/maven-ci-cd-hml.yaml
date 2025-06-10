@@ -70,7 +70,6 @@ jobs:
 #         webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   CI:
-    needs: Notify_Start
     if: ${{ !inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
