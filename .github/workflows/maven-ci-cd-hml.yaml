@@ -15,7 +15,7 @@ on:
         type: string
       is_production_branch:
         description: 'Indica se a execução é para uma branch de produção (master/main)'
-        required: true
+        required: false
         type: boolean
       SONAR_BDSP_HOST_URL:
         description: 'URL do host do SonarQube'
@@ -70,7 +70,6 @@ jobs:
 #         webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   CI:
-    if: ${{ !inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
@@ -227,7 +226,7 @@ jobs:
 
   CD:
     needs: CI
-    if: ${{ !inputs.is_production_branch && success() }}
+    if: ${{success() }}
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
