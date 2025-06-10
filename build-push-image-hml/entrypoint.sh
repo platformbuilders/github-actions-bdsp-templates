@@ -14,22 +14,22 @@ REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
 
 # Definir REPOSITORY_URI para a branch
 if [[ "$GITHUB_REF_NAME" == "staging" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/staging"
+  REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/staging"
 elif [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/master"
+  REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/master"
 elif [[ "$GITHUB_REF_NAME" == "develop" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/develop"
+  REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/develop"
 elif [[ "$GITHUB_REF_NAME" =~ ^release/ ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/release"
+  REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/release"
 elif [[ "$GITHUB_REF_NAME" == "homolog" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/homolog"
+  REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/homolog"
 else
   echo "Branch not supported: $GITHUB_REF_NAME"
   exit 1
 fi
 
 # Definir REPOSITORY_URI para master
-REPOSITORY_URI_PRD="us-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/master"
+REPOSITORY_URI_PRD="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/master"
 
 echo "REPOSITORY_URI_BRANCH: $REPOSITORY_URI_BRANCH"
 echo "REPOSITORY_URI_PRD: $REPOSITORY_URI_PRD"
@@ -46,7 +46,7 @@ fi
 # Autenticar o gcloud
 gcloud auth activate-service-account --key-file=gcp-sa.json
 # Configurar o Docker para autenticar com o GCR
-gcloud auth configure-docker us-docker.pkg.dev
+gcloud auth configure-docker us-central1-docker.pkg.dev
 
 # Verificar se a branch é master ou main
 # #if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
