@@ -38,7 +38,7 @@ echo "Target Overlay Directory: overlays/${TARGET_OVERLAY_DIR}"
 echo "Target Manifest Branch (Initial Checkout): ${TARGET_MANIFEST_BRANCH}"
 echo "Is Production Flow (Isolated PR): ${IS_PROD_FLOW}"
 
-REPOSITORY_URI_BRANCH="us-docker.pkg.dev/hello-world-hml/${REPOSITORY_NAME}/${GITHUB_REF_NAME%%/*}"
+REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/hello-world-hml/${REPOSITORY_NAME}/${GITHUB_REF_NAME%%/*}"
 echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
 
 # Clone manifests repo
