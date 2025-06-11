@@ -82,6 +82,7 @@ jobs:
         with:
           extra_args: >
             --log-level=2
+            --results=verified
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
