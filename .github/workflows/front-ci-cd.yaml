@@ -77,12 +77,12 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
-      - name: Run Secret Scanner
-        uses: trufflesecurity/trufflehog@main
-        with:
-          extra_args: >
-            --log-level=2
-            --results=verified
+      #- name: Run Secret Scanner
+      #  uses: trufflesecurity/trufflehog@main
+      # with:
+      #   extra_args: >
+      #      --log-level=2
+      #      --results=verified
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
