@@ -12,22 +12,61 @@ SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
 
-# Definir REPOSITORY_URI para a branch
-if [[ "$GITHUB_REF_NAME" == "staging" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging"
-elif [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master"
-elif [[ "$GITHUB_REF_NAME" == "develop" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop"
-elif [[ "$GITHUB_REF_NAME" =~ ^release/ ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release"
-elif [[ "$GITHUB_REF_NAME" == "homolog" ]]; then
-  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/homolog"
-else
-  echo "Branch not supported: $GITHUB_REF_NAME"
-  exit 1
-fi
 
+
+if DEPLOY_PROVIDER == "GCP"
+    # Definir REPOSITORY_URI para a branch
+    case "$GITHUB_REF_NAME" in "staging" )
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging" ;;
+    
+    "master")  
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master" ;;
+    
+    "main")  
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master" ;;
+    
+    "develop")
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop";;
+    
+    "release")
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release";;
+    
+    "homolog")
+      REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/homolog" ;;
+    * )
+      
+      echo "Branch not supported: $GITHUB_REF_NAME"
+      exit 1
+    esac    
+elif DEPLOY_PROVIDER == "AWS"
+  REPOSITORY_URI_BRANCH = 
+    case "$GITHUB_REF_NAME" in "staging" )
+      REPOSITORY_URI_BRANCH="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME" ;;
+    
+    "master")  
+      REPOSITORY_URI_BRANCH="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME:master" ;;
+    
+    "main")  
+      REPOSITORY_URI_BRANCH="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME:master" ;;
+    
+    "develop")
+      REPOSITORY_URI_BRANCH="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME:develop";;
+    
+    "release")
+      REPOSITORY_URI_BRANCH="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME:release";;
+    
+    "homolog")
+      REPOSITORY_URI_BRANCH="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME:homolog";;
+    * )
+      
+      echo "Branch not supported: $GITHUB_REF_NAME"
+      exit 1
+    esac
+else
+  echo "DEPLOY_PROVIDER não definido ou inválido."
+  exit 1 
+
+fi
 # Definir REPOSITORY_URI para master
 REPOSITORY_URI_PRD="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master"
 
