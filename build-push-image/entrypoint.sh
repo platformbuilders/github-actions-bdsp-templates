@@ -22,12 +22,6 @@ else
     exit 1
 fi
 
-elif [$DEPLOY_PROVIDER == "AWS"]; then
-    echo "DEPLOY_PROVIDER is set to AWS"
-else
-    echo "DEPLOY_PROVIDER is not set or invalid."
-    exit 1
-fi
 
 if [$DEPLOY_PROVIDER == "GCP"];  then
     # Definir REPOSITORY_URI para a branch
