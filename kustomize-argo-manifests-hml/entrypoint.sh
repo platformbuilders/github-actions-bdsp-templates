@@ -17,9 +17,8 @@ IS_PROD_FLOW=false
 
 case "$GITHUB_REF_NAME" in
   "main"|"master")
-    TARGET_OVERLAY_DIR="prod"
-    PR_BASE_BRANCH="main"
-    IS_PROD_FLOW=true
+    TARGET_OVERLAY_DIR="homolog"
+    IS_PROD_FLOW=false
     ;;
   "staging"|"homolog"|release/*)
     TARGET_OVERLAY_DIR="homolog"
@@ -39,7 +38,7 @@ echo "Target Overlay Directory: overlays/${TARGET_OVERLAY_DIR}"
 echo "Target Manifest Branch (Initial Checkout): ${TARGET_MANIFEST_BRANCH}"
 echo "Is Production Flow (Isolated PR): ${IS_PROD_FLOW}"
 
-REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME%%/*}"
+REPOSITORY_URI_BRANCH="us-central1-docker.pkg.dev/bdsp-devtools/${REPOSITORY_NAME}/master"
 echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
 
 # Clone manifests repo
