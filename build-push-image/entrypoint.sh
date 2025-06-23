@@ -13,14 +13,14 @@ SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
 
-if [$DEPLOY_PROVIDER== "GCP"]; then
+if [$DEPLOY_PROVIDER == "GCP"]; then
     SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY
-elif [$DEPLOY_PROVIDER == "AWS"]; 
+elif [$DEPLOY_PROVIDER == "AWS"]; then
     $AWS_CREDS=$AWS_SERVICE_ACCOUNT_KEY
     eval $AWS_CREDS
 else
-    echo "DEPLOY_PROVIDER não definido ou inválido."
-    exit 1
+  echo "DEPLOY_PROVIDER não definido ou inválido."
+  exit 1
 fi
 
 
