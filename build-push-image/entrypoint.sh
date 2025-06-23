@@ -3,6 +3,7 @@
 set -e
 
 GITHUB_REF_NAME="main"  
+
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
 # Adicionar o diretório workspace à lista de diretórios seguros
@@ -13,18 +14,17 @@ SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
 
-if [$DEPLOY_PROVIDER == "GCP"]; then
+if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
     SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY
-elif [$DEPLOY_PROVIDER == "AWS"]; then
-    $AWS_CREDS=$AWS_SERVICE_ACCOUNT_KEY
+elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
+    AWS_CREDS=$AWS_SERVICE_ACCOUNT_KEY
     eval $AWS_CREDS
 else
   echo "DEPLOY_PROVIDER não definido ou inválido."
   exit 1
 fi
 
-
-if [$DEPLOY_PROVIDER == "GCP"];  then
+if [ $DEPLOY_PROVIDER == "GCP" ];  then
     # Definir REPOSITORY_URI para a branch
     case "$GITHUB_REF_NAME" in "staging" )
       REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/staging" ;;
@@ -48,7 +48,7 @@ if [$DEPLOY_PROVIDER == "GCP"];  then
       echo "Branch not supported: $GITHUB_REF_NAME"
       exit 1
     esac    
-elif [$DEPLOY_PROVIDER == "AWS"]; then
+elif [ $DEPLOY_PROVIDER == "AWS" ]; then
     REPOSITORY_URI_BRANCH_HML="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"  
     REPOSITORY_URI_BRANCH_PRD="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"
 
@@ -80,9 +80,9 @@ else
 
 fi
 # Definir REPOSITORY_URI para master
-if [$DEPLOY_PROVIDER == "GCP"]; then
+if [ $DEPLOY_PROVIDER == "GCP" ]; then
     REPOSITORY_URI_PRD="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/master"
-elif [$DEPLOY_PROVIDER == "AWS"]; then
+elif [ $DEPLOY_PROVIDER == "AWS" ]; then
     REPOSITORY_URI_PRD=$REPOSITORY_URI_BRANCH_PRD
 fi
 
@@ -100,12 +100,12 @@ else
     echo "$SERVICE_ACCOUNT_KEY" > gcp-sa.json
 fi
 
-if [$DEPLOY_PROVIDER == "GCP"]; then
+if [ $DEPLOY_PROVIDER == "GCP" ]; then
   # Autenticar o gcloud
   gcloud auth activate-service-account --key-file=gcp-sa.json
   # Configurar o Docker para autenticar com o GCR
   gcloud auth configure-docker us-docker.pkg.dev
-elif [$DEPLOY_PROVIDER == "AWS"]; then
+elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   # Autenticar o AWS CLI
   aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
   aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
