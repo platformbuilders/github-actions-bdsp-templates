@@ -38,7 +38,7 @@ if [$DEPLOY_PROVIDER == "GCP"];  then
     "develop")
       REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop";;
     
-    "release")
+    "add/workflow-aws-applications") #todo voltar todos para release
       REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release";;
     
     "homolog")
@@ -64,7 +64,7 @@ elif [$DEPLOY_PROVIDER == "AWS"]; then
     "develop")
       REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
     
-    "release")
+    "add/workflow-aws-applications")
       REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
     
     "homolog")
@@ -187,7 +187,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
 
 # Verificar se a branch é release/*, staging ou homolog
-elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
+elif [[ "$GITHUB_REF_NAME" =~ ^add/workflow-aws-applications/ || "$GITHUB_REF_NAME" == "staging" || "$GITHUB_REF_NAME" == "homolog" ]]; then
 
   if [[ "$PROJECT_TYPE" == "frontend" ]]; then
       echo "Detectado projeto frontend. Realizando build e push..."
