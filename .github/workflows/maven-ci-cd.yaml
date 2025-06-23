@@ -207,7 +207,7 @@ jobs:
 
       - name: Build and Push Docker image to GCR
         id: build_push
-        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@add/workflow-aws-applications
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
