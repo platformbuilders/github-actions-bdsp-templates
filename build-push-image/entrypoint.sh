@@ -12,7 +12,6 @@ git config --global --add safe.directory /github/workspace
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
-REPOSITORY_NAME="openbanking-services"
 
 if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
     SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY
@@ -169,9 +168,16 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
             exit 1
         fi
         fi
+
+      if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
+        IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
+        IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | awk '{print $3}')
+
+      elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
+        IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | jq -r '.imageDigest')
+        IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | jq -r '.imageTags[]' | grep -v latest)
       
-      IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
-      IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | awk '{print $3}')
+      fi
 
       if [[ -z "$IMAGE_TAG" ]] || [[ -z "$IMAGE_DIGEST" ]] || [[ ! "$IMAGE_DIGEST" =~ ^sha256: ]]; then
          echo "Erro Crítico: Falha ao extrair tag ou digest válido da linha."
