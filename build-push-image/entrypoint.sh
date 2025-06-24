@@ -2,8 +2,7 @@
 
 set -e
 
-GITHUB_REF_NAME="main"  
-
+GITHUB_REF_NAME="main"
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
 # Adicionar o diretório workspace à lista de diretórios seguros
@@ -13,6 +12,7 @@ git config --global --add safe.directory /github/workspace
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
 REPOSITORY_NAME=$(basename "$GITHUB_REPOSITORY")
+REPOSITORY_NAME="openbanking-services"
 
 if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
     SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY
