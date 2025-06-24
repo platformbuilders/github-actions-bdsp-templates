@@ -2,7 +2,7 @@
 
 set -e
 
-GITHUB_REF_NAME="main"
+GITHUB_REF_NAME="homolog"
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
 # Adicionar o diretório workspace à lista de diretórios seguros
@@ -130,7 +130,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
         gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
       fi
 
-    #  docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
+      docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_PRD":"$SHORT_SHA" | cut -d '@' -f 2)
       IMAGE_TAG="$SHORT_SHA" 
@@ -208,12 +208,12 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
         gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
       fi
 
-    #  docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
+      docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" | cut -d '@' -f 2)
       IMAGE_TAG="$SHORT_SHA"
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
-
+    
       echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
       echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
       echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
@@ -234,8 +234,8 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
     fi
 
     docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA"
-  #  docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
-  #  docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
+    docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
+    docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
     echo "Build e push realizado para $GITHUB_REF_NAME e master"
 
@@ -261,7 +261,7 @@ else
     gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
   fi
 
-#  docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
+  docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
 
   echo "Build e push realizado para $GITHUB_REF_NAME"
 
