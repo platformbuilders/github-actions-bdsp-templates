@@ -110,8 +110,15 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
   aws configure set default.region "$AWS_REGION"
 
-  # Autenticar o Docker com o ECR
-  aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH"
+  # Autenticar o Docker com o ECR HML
+  aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
+
+  # Autenticar o Docker com o ECR PRD (outra conta)
+  #aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
+  #aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
+  #aws configure set default.region "$AWS_REGION"
+#
+  #aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
 # Verificar se a branch é master ou main
@@ -130,7 +137,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
         gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
       fi
 
-      docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
+    #  docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
       IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REPOSITORY_URI_PRD":"$SHORT_SHA" | cut -d '@' -f 2)
       IMAGE_TAG="$SHORT_SHA" 
@@ -233,9 +240,9 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
       gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
     fi
 
-    docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA"
+    #docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA"
     docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
-    docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
+    #docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
 
     echo "Build e push realizado para $GITHUB_REF_NAME e master"
 
@@ -286,3 +293,4 @@ fi
 
 echo "Script de build e push concluído com sucesso."
 echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
