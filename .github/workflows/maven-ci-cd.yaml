@@ -69,17 +69,17 @@ env:
 
 jobs:
 
-  Notify_Start:
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Notify Slack: Start"
-        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
-        with:
-          type: "start"
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+#  Notify_Start:
+#    runs-on: ubuntu-latest
+#    steps:
+#     - name: "Notify Slack: Start"
+#        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+#        with:
+#          type: "start"
+#          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   CI:
-    needs: Notify_Start
+ #   needs: Notify_Start
     if: ${{ !inputs.is_production_branch }}
     runs-on: ubuntu-latest
     outputs:
