@@ -270,7 +270,7 @@ jobs:
 
 
   CI_PRD:
-    needs: Notify_Start
+    #needs: Notify_Start
     
     if: ${{ inputs.is_production_branch }}
     runs-on: ubuntu-latest
