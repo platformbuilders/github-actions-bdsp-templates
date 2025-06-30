@@ -114,11 +114,11 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
 
   # Autenticar o Docker com o ECR PRD (outra conta)
-  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
-  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
-  aws configure set default.region "$AWS_REGION"
+  #aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
+  #aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
+  #aws configure set default.region "$AWS_REGION"
 
-  aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
+  #aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
 # Verificar se a branch é master ou main
@@ -174,7 +174,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
             echo "Erro Crítico: Nenhuma linha de dados retornada por gcloud."
             exit 1
         fi
-        fi
+      fi
 
       if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
         IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
