@@ -167,7 +167,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
         fi
       elif  [ "$DEPLOY_PROVIDER" == "AWS" ]; then
           LATEST_IMAGE_LINE=$(aws ecr describe-images \
-            --repository-name "$REPOSITORY_URI_PRD" \
+            --repository-name "$REPOSITORY_NAME" \
             --region "$AWS_REGION_PRD" \
             --query 'sort_by(imageDetails,& imagePushedAt)[-1]' \
             --output json)
