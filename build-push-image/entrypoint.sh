@@ -108,16 +108,16 @@ if [ $DEPLOY_PROVIDER == "GCP" ]; then
   gcloud auth configure-docker us-docker.pkg.dev
 elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   # Autenticar o AWS CLI
-  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
-  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile hml
+  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile hml
   aws configure set region "$AWS_REGION" --profile hml
 
   # Autenticar o Docker com o ECR HML
   aws ecr get-login-password  --region "$AWS_REGION" --profile hml | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
 
   # Autenticar o Docker com o ECR PRD (outra conta)
-  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
-  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
+  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"  --profile prd 
+  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD" --profile prd 
   aws configure set region "$AWS_REGION_PRD" --profile prd
 
   aws ecr get-login-password --region "$AWS_REGION_PRD" --profile prd | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
