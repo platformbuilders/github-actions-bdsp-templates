@@ -121,7 +121,7 @@ jobs:
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
-          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ env.AWS_SERVICE_ACCOUNT_KEY_PRD }}
+          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: Run Image Vulnerability Scanner
