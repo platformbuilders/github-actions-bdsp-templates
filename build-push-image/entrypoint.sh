@@ -110,17 +110,17 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   # Autenticar o AWS CLI
   aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
   aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-  aws configure set default.region "$AWS_REGION"
+  aws configure set default.region "$AWS_REGION" --profile hml
 
   # Autenticar o Docker com o ECR HML
-  aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
+  aws ecr get-login-password  --region "$AWS_REGION" --profile hml | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
 
   # Autenticar o Docker com o ECR PRD (outra conta)
   aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
   aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
-  aws configure set default.region "$AWS_REGION_PRD"
+  aws configure set default.region "$AWS_REGION_PRD" --profile prd
 
-  aws ecr get-login-password --region "$AWS_REGION_PRD" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
+  aws ecr get-login-password --region "$AWS_REGION_PRD" --profile prd | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
 # Verificar se a branch é master ou main
@@ -169,6 +169,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
           LATEST_IMAGE_LINE=$(aws ecr describe-images \
             --repository-name "$REPOSITORY_NAME" \
             --region "$AWS_REGION_PRD" \
+            --profile prd \
             --query 'sort_by(imageDetails,& imagePushedAt)[-1]' \
             --output json)
 
@@ -246,6 +247,7 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
     TAG_EXISTS=$(aws ecr describe-images \
     --repository-name "$REPOSITORY_NAME" \
     --region "$AWS_REGION" \
+    --profile hml \
     --query "imageDetails[?contains(imageTags, '$SHORT_SHA')].imageTags[]" \
     --output text 2>/dev/null || true)
 
