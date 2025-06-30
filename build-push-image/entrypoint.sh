@@ -167,13 +167,13 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
         fi
       elif  [ "$DEPLOY_PROVIDER" == "AWS" ]; then
           LATEST_IMAGE_LINE=$(aws ecr describe-images \
-            --repository-name "$REPOSITORY_NAME" \
-            --region "$AWS_REGION" \
+            --repository-name "$REPOSITORY_URI_PRD" \
+            --region "$AWS_REGION_PRD" \
             --query 'sort_by(imageDetails,& imagePushedAt)[-1]' \
             --output json)
 
         if [[ -z "$LATEST_IMAGE_LINE" ]]; then
-            echo "Erro Crítico: Nenhuma linha de dados retornada por gcloud."
+            echo "Erro Crítico: Nenhuma linha de dados retornada por AWS ECR."
             exit 1
         fi
       fi
@@ -233,6 +233,7 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
   else
     docker build -t "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" .
 
+  if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
     TAG_EXISTS=$(gcloud artifacts docker tags list "$REPOSITORY_URI_BRANCH" \
     --filter="tag~'$SHORT_SHA'" \
     --format="value(tag)" 2>/dev/null || true)
@@ -241,7 +242,23 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
       echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
       gcloud artifacts docker tags delete "$REPOSITORY_URI_BRANCH:$SHORT_SHA" --quiet || true
     fi
+  elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
+    TAG_EXISTS=$(aws ecr describe-images \
+    --repository-name "$REPOSITORY_NAME" \
+    --region "$AWS_REGION" \
+    --query "imageDetails[?contains(imageTags, '$SHORT_SHA')].imageTags[]" \
+    --output text 2>/dev/null || true)
 
+    if [[ -n "$TAG_EXISTS" ]]; then
+      echo "Tag '$SHORT_SHA' já existe em $REPOSITORY_URI_BRANCH. Deletando..."
+      aws ecr batch-delete-image \
+        --repository-name "$REPOSITORY_NAME" \
+        --region "$AWS_REGION" \
+        --image-ids imageTag="$SHORT_SHA" \
+        --output text || true
+    fi
+    
+  fi
     docker tag "$REPOSITORY_URI_BRANCH":"$SHORT_SHA" "$REPOSITORY_URI_PRD":"$SHORT_SHA"
     docker push "$REPOSITORY_URI_BRANCH":"$SHORT_SHA"
     docker push "$REPOSITORY_URI_PRD":"$SHORT_SHA"
