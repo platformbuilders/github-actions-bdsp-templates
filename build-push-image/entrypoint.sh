@@ -17,7 +17,9 @@ if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
     SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY
 elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
     AWS_CREDS=$AWS_SERVICE_ACCOUNT_KEY
+    AWS_CREDS_PROD=$AWS_SERVICE_ACCOUNT_KEY_PRD
     eval $AWS_CREDS
+    eval $AWS_CREDS_PROD
 else
   echo "DEPLOY_PROVIDER não definido ou inválido."
   exit 1
@@ -114,11 +116,11 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
 
   # Autenticar o Docker com o ECR PRD (outra conta)
-  #aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
-  #aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
-  #aws configure set default.region "$AWS_REGION"
+  aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"
+  aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD"
+  aws configure set default.region "$AWS_REGION_PRD"
 
-  #aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
+  aws ecr get-login-password --region "$AWS_REGION_PRD" | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
 # Verificar se a branch é master ou main
@@ -289,6 +291,10 @@ elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
     echo "Removendo credenciais do AWS..."
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
+    unset AWS_REGION
+    unset AWS_ACCESS_KEY_ID_PRD
+    unset AWS_SECRET_ACCESS_KEY_PRD
+    unset AWS_REGION_PRD
 fi
 
 echo "Script de build e push concluído com sucesso."
