@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@add/workflow-aws-applications
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
@@ -162,6 +162,7 @@ jobs:
           repository-name: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
      
       - name: "Notify Slack: Success (CI/CD Non-Prod)"
@@ -217,7 +218,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@add/workflow-aws-applications
         with:
           image-tag: ${{ needs.CI_PRD.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
@@ -225,6 +226,7 @@ jobs:
           repository-name: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: "Notify Slack: Success (CI/CD PRD)"
         if: ${{ success() }}
