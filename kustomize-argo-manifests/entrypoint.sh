@@ -45,11 +45,11 @@ if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
 
 elif [[ $DEPLOY_PROVIDER == "AWS" && "$IS_PROD_FLOW" ]]; then
   REPOSITORY_URI_BRANCH="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"
-  echo "Determined Repository URI Branch: $2{REPOSITORY_URI_BRANCH}"
+  echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
 
 elif [[ $DEPLOY_PROVIDER == "AWS" && "$IS_PROD_FLOW" != "true"  ]]; then
   REPOSITORY_URI_BRANCH="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME" 
-  echo "Determined Repository URI Branch: $2{REPOSITORY_URI_BRANCH}"
+  echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
 fi
 
 # Clone manifests repo
