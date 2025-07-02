@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -euo pipefail
-GITHUB_REF_NAME="homolog"
 IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
@@ -11,7 +10,7 @@ ARGO_MANIFESTS_REPO_SLUG="github.com/platformbuilders/pnb-pefisa-gitops-manifets
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 
 TARGET_OVERLAY_DIR=""
-TARGET_MANIFEST_BRANCH="add/open-bank-manifest"
+TARGET_MANIFEST_BRANCH="main"
 PR_BASE_BRANCH=""
 IS_PROD_FLOW=false
 
