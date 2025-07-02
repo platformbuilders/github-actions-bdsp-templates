@@ -2,7 +2,6 @@
 
 set -e
 
-GITHUB_REF_NAME="main"
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
 # Adicionar o diretório workspace à lista de diretórios seguros
