@@ -11,7 +11,7 @@ ARGO_MANIFESTS_REPO_SLUG="github.com/platformbuilders/pnb-pefisa-gitops-manifets
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 
 TARGET_OVERLAY_DIR=""
-TARGET_MANIFEST_BRANCH="add/open-bank-manifest"
+TARGET_MANIFEST_BRANCH="main"
 PR_BASE_BRANCH=""
 IS_PROD_FLOW=false
 
