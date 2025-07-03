@@ -52,27 +52,13 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
     REPOSITORY_URI_BRANCH_HML="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"  
     REPOSITORY_URI_BRANCH_PRD="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"
 
-    case "$GITHUB_REF_NAME" in "staging" )
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML ;;
-    
-    "master")  
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML ;;
-    
-    "main")  
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
-    
-    "develop")
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
-    
-    "release")
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
-    
-    "homolog")
-      REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML;;
-    * )
-      
-      echo "Branch not supported: $GITHUB_REF_NAME"
-      exit 1
+    case "$GITHUB_REF_NAME" in
+      staging|master|main|develop|release*|homolog)
+        REPOSITORY_URI_BRANCH=$REPOSITORY_URI_BRANCH_HML ;;
+      *)
+        echo "Branch not supported: $GITHUB_REF_NAME"
+        exit 1
+        ;;
     esac
 else
   echo "DEPLOY_PROVIDER não definido ou inválido."
