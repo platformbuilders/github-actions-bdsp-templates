@@ -38,7 +38,7 @@ if [ $DEPLOY_PROVIDER == "GCP" ];  then
     "develop")
       REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/develop";;
     
-    "release*")
+    release*)
       REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/$REPOSITORY_NAME/release";;
     
     "homolog")
