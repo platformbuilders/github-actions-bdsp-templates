@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -euo pipefail
-
 IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
@@ -39,8 +38,18 @@ echo "Target Overlay Directory: overlays/${TARGET_OVERLAY_DIR}"
 echo "Target Manifest Branch (Initial Checkout): ${TARGET_MANIFEST_BRANCH}"
 echo "Is Production Flow (Isolated PR): ${IS_PROD_FLOW}"
 
-REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME%%/*}"
-echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
+if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
+  REPOSITORY_URI_BRANCH="us-docker.pkg.dev/image-registry-326015/${REPOSITORY_NAME}/${GITHUB_REF_NAME%%/*}"
+  echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
+
+elif [[ $DEPLOY_PROVIDER == "AWS" && "$IS_PROD_FLOW" ]]; then
+  REPOSITORY_URI_BRANCH="715663453372.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME"
+  echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
+
+elif [[ $DEPLOY_PROVIDER == "AWS" && "$IS_PROD_FLOW" != "true"  ]]; then
+  REPOSITORY_URI_BRANCH="756376728940.dkr.ecr.sa-east-1.amazonaws.com/$REPOSITORY_NAME" 
+  echo "Determined Repository URI Branch: ${REPOSITORY_URI_BRANCH}"
+fi
 
 # Clone manifests repo
 git clone "https://${GITHUB_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"

@@ -4,7 +4,12 @@ on:
   workflow_call:
     # Pipeline de CI/CD padrão para aplicações Maven, incluindo build, testes, SonarQube e scan de imagem.
 
-    inputs:
+    inputs:      
+      DEPLOY_PROVIDER:
+        description: 'Ambiente de deploy (GCP, AWS, etc.)'
+        required: false
+        default: 'GCP'
+        type: string
       java_version:
         description: 'Versão do Java a ser usada'
         required: true
@@ -29,9 +34,15 @@ on:
       SONAR_BDSP_TOKEN:
         description: 'Token de acesso ao SonarQube'
         required: true
+      AWS_SERVICE_ACCOUNT_KEY_PRD:
+        description: 'Chave da service account AWS para produção'
+        required: false
+      AWS_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account AWS para não produção'
+        required: false
       GCP_SERVICE_ACCOUNT_KEY:
         description: 'Chave da service account GCP'
-        required: true
+        required: false
       TOKEN_GITHUB:
         description: 'Token do GitHub para automação'
         required: true
@@ -49,6 +60,7 @@ on:
 
 
 env:
+  DEPLOY_PROVIDER: ${{inputs.DEPLOY_PROVIDER }}
   JAVA_VERSION: ${{ inputs.java_version }}
   SONAR_LANGUAGE: "java"
   SONAR_MAIN_BRANCH: "master"
@@ -196,11 +208,15 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
 
+
       - name: Build and Push Docker image to GCR
         id: build_push
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: Run Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
@@ -240,6 +256,7 @@ jobs:
           repository-name: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
      
       - name: "Notify Slack: Success (CI/CD Non-Prod)"
@@ -277,6 +294,9 @@ jobs:
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: "Notify Slack: Failure (CI_PRD)"
         if: ${{ failure() }}
@@ -300,6 +320,7 @@ jobs:
           repository-name: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: "Notify Slack: Success (CI/CD PRD)"
         if: ${{ success() }}
