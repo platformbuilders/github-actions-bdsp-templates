@@ -5,6 +5,11 @@ on:
     # Pipeline de CI/CD padrão para aplicações Maven que utilizam packages/bibliotecas, incluindo build, testes, SonarQube e scan de imagem.
 
     inputs:
+      DEPLOY_PROVIDER:
+        description: 'Ambiente de deploy (GCP, AWS, etc.)'
+        required: false
+        default: 'GCP'
+        type: string
       java_version:
         description: 'Versão do Java a ser usada'
         required: true
