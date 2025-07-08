@@ -71,6 +71,11 @@ jobs:
 
   CI:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
       IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
@@ -228,6 +233,11 @@ jobs:
     needs: CI
     if: ${{success() }}
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      
     steps:
       - name: Kustomize Argo Manifests
         uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests-hml@main
