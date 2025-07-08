@@ -36,10 +36,16 @@ on:
         required: true
       GCP_SERVICE_ACCOUNT_KEY:
         description: 'Chave da service account GCP'
-        required: true
+        required: false
       TOKEN_GITHUB:
         description: 'Token do GitHub para automação'
         required: true
+      AWS_SERVICE_ACCOUNT_KEY_PRD:
+        description: 'Chave da service account AWS para produção'
+        required: false
+      AWS_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account AWS para não produção'
+        required: false
 
     outputs:
       IMAGE_TAG:
@@ -55,6 +61,8 @@ on:
 
 env:
   NODE_VERSION: ${{ inputs.node_version }}
+  DEPLOY_PROVIDER: ${{inputs.DEPLOY_PROVIDER }}
+
 
 jobs:
 
@@ -163,6 +171,9 @@ jobs:
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           PROJECT_TYPE: frontend 
+          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: Run Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
@@ -201,7 +212,7 @@ jobs:
           repository-name: ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
      
       - name: "Notify Slack: Success (CD)"
         if: ${{ success() }}

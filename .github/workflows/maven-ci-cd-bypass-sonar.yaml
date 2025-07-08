@@ -46,6 +46,12 @@ on:
       TOKEN_GITHUB:
         description: 'Token do GitHub para automação'
         required: true
+      AWS_SERVICE_ACCOUNT_KEY_PRD:
+        description: 'Chave da service account AWS para produção'
+        required: false
+      AWS_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account AWS para não produção'
+        required: false
 
     outputs:
       IMAGE_TAG:
