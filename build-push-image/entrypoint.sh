@@ -110,6 +110,7 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   # Autenticar o Docker com o ECR HML
   aws ecr get-login-password  --region "$AWS_REGION" --profile hml | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_HML"
 
+  echo $AWS_REGION_PRD
   # Autenticar o Docker com o ECR PRD (outra conta)
   aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID_PRD"  --profile prd 
   aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY_PRD" --profile prd 
