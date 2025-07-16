@@ -116,7 +116,7 @@ jobs:
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY }} 
           AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
@@ -196,7 +196,7 @@ jobs:
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY }} 
           AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
