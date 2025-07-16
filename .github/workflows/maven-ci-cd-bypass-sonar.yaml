@@ -1,9 +1,7 @@
 name: maven-ci-cd
-
 on:
   workflow_call:
     # Pipeline de CI/CD padrão para aplicações Maven, incluindo build, testes, SonarQube e scan de imagem.
-
     inputs:      
       DEPLOY_PROVIDER:
         description: 'Ambiente de deploy (GCP, AWS, etc.)'
@@ -34,12 +32,6 @@ on:
       SONAR_BDSP_TOKEN:
         description: 'Token de acesso ao SonarQube'
         required: true
-      AWS_SERVICE_ACCOUNT_KEY_PRD:
-        description: 'Chave da service account AWS para produção'
-        required: false
-      AWS_SERVICE_ACCOUNT_KEY:
-        description: 'Chave da service account AWS para não produção'
-        required: false
       GCP_SERVICE_ACCOUNT_KEY:
         description: 'Chave da service account GCP'
         required: false
