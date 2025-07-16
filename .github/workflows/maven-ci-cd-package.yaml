@@ -28,7 +28,7 @@ on:
         type: string
       GITHUB_USERNAME:
         description: 'Nome de usuário do GitHub para autenticação'
-        required: trueDEPLOY
+        required: true
         type: string
 
     secrets:
@@ -286,7 +286,7 @@ jobs:
     
     if: ${{ inputs.is_production_branch }}
     runs-on: ubuntu-latest
-    outputs:CD
+    outputs:
       IMAGE_TAG: ${{ steps.get_image.outputs.IMAGE_TAG }}
       IMAGE_DIGEST: ${{ steps.get_image.outputs.IMAGE_DIGEST }}
     steps:
