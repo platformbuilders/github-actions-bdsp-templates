@@ -3,7 +3,6 @@ name: maven-ci-cd
 on:
   workflow_call:
     # Pipeline de CI/CD padrão para aplicações Maven, incluindo build, testes, SonarQube e scan de imagem.
-
     inputs:      
       DEPLOY_PROVIDER:
         description: 'Ambiente de deploy (GCP, AWS, etc.)'
