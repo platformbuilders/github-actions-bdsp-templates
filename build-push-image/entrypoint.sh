@@ -7,16 +7,6 @@ echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 # Adicionar o diretório workspace à lista de diretórios seguros
 git config --global --add safe.directory /github/workspace
 
-if [ "$IBK_APP" == "true" ]; then
-# Variáveis
-    REGISTRY_URL="sa-saopaulo-1.ocir.io"    
-    USERNAME=$OCI_USER_REGISTRY             
-    PASSWORD=$OCI_PASS_REGISTRY
-    
-    # Login no Container Registry oci para pegar java do ibk
-    echo "$PASSWORD" | docker login "$REGISTRY_URL" --username "$USERNAME" --password-stdin
-fi
-
 # Get short SHA
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
 # Build and Push Docker image
