@@ -4,16 +4,19 @@ description: 'Builds and pushes a Docker image to Google Artifact Registry (GCR)
 inputs:
   GCP_PROJECT:
     description: 'ID do projeto GCP'
-    required: true
+    required: false
+    default: 'bdsp-devtools'
   GCP_LOCATION:
     description: 'Região do Artifact Registry (ex: us-central1)'
-    required: true
+    required: false
+    default: 'us-central1'
   GCP_REPO:
     description: 'Nome do repositório do Artifact Registry'
-    required: true
+    required: false
+    default: 'build-push-images'
   IMAGE_NAME:
     description: 'Nome da imagem no GCP (sem tag)'
-    required: true
+    required: 'build-push-image'
 
 outputs:
   IMAGE_TAG:
