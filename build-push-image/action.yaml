@@ -16,7 +16,8 @@ inputs:
     default: 'build-push-images'
   IMAGE_NAME:
     description: 'Nome da imagem no GCP (sem tag)'
-    required: 'build-push-image'
+    required: false
+    default: 'build-push-image'
 
 outputs:
   IMAGE_TAG:
