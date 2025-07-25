@@ -20,7 +20,7 @@ RUN curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscli
     && unzip awscliv2.zip \
     && ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update \
     && rm -rf awscliv2.zip
-
+    
 COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
