@@ -24,5 +24,5 @@ RUN curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscli
 COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
- 
+
 ENTRYPOINT ["/entrypoint.sh"]
