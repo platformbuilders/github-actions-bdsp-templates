@@ -1,5 +1,5 @@
-name: 'Build and Push Docker Image to GCR'
-description: 'Builds and pushes a Docker image to Google Artifact Registry (GCR) based on the branch.'
+name: 'Run Docker Image from GCR'
+description: 'Runs a predefined Docker image from Google Artifact Registry (GCR) to build and push an application.'
 
 inputs:
   GCP_PROJECT:
@@ -18,38 +18,24 @@ inputs:
     description: 'Nome da imagem no GCP (sem tag)'
     required: false
     default: 'build-push-image'
-
-outputs:
   IMAGE_TAG:
-    description: 'Tag da imagem Docker.'
-    value: ${{ steps.set-outputs.outputs.image_tag }}
-  IMAGE_DIGEST:
-    description: 'Digest da imagem Docker.'
-    value: ${{ steps.set-outputs.outputs.image_digest }}
+    description: 'Tag da imagem no GCP'
+    required: false
+    default: 'latest'
 
 runs:
   using: 'composite'
   steps:
-    - name: Configure Docker to use Artifact Registry
+    - name: Auth Docker com Artifact Registry
       shell: bash
       run: |
         gcloud auth configure-docker ${{ inputs.GCP_LOCATION }}-docker.pkg.dev --quiet
 
-    - name: Build and Push Image
+    - name: Run Docker image
       shell: bash
       run: |
-        IMAGE_TAG="${{ inputs.GCP_LOCATION }}-docker.pkg.dev/${{ inputs.GCP_PROJECT }}/${{ inputs.GCP_REPO }}/${{ inputs.IMAGE_NAME }}:$(echo $GITHUB_SHA | cut -c1-7)"
-        docker build -t "$IMAGE_TAG" .
-        docker push "$IMAGE_TAG"
+        IMAGE="${{ inputs.GCP_LOCATION }}-docker.pkg.dev/${{ inputs.GCP_PROJECT }}/${{ inputs.GCP_REPO }}/${{ inputs.IMAGE_NAME }}:${{ inputs.IMAGE_TAG }}"
 
-        DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_TAG")
+        echo "Executando imagem $IMAGE com bind no workspace atual"
 
-        echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-        echo "IMAGE_DIGEST=$DIGEST" >> "$GITHUB_OUTPUT"
-
-    - name: Set Outputs
-      id: set-outputs
-      shell: bash
-      run: |
-        echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
-        echo "image_digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+        docker run --rm -v "$PWD":/workspace -w /workspace "$IMAGE"
