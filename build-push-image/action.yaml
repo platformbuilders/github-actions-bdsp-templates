@@ -1,10 +1,51 @@
 name: 'Build and Push Docker Image to GCR'
-description: 'Builds and pushes a Docker image to Google Container Registry (GCR) based on the branch.'
-runs:
-  using: 'docker'
-  image: 'Dockerfile'
+description: 'Builds and pushes a Docker image to Google Artifact Registry (GCR) based on the branch.'
+
+inputs:
+  GCP_PROJECT:
+    description: 'ID do projeto GCP'
+    required: true
+  GCP_LOCATION:
+    description: 'Região do Artifact Registry (ex: us-central1)'
+    required: true
+  GCP_REPO:
+    description: 'Nome do repositório do Artifact Registry'
+    required: true
+  IMAGE_NAME:
+    description: 'Nome da imagem no GCP (sem tag)'
+    required: true
+
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
+    value: ${{ steps.set-outputs.outputs.image_tag }}
   IMAGE_DIGEST:
     description: 'Digest da imagem Docker.'
+    value: ${{ steps.set-outputs.outputs.image_digest }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure Docker to use Artifact Registry
+      shell: bash
+      run: |
+        gcloud auth configure-docker ${{ inputs.GCP_LOCATION }}-docker.pkg.dev --quiet
+
+    - name: Build and Push Image
+      shell: bash
+      run: |
+        IMAGE_TAG="${{ inputs.GCP_LOCATION }}-docker.pkg.dev/${{ inputs.GCP_PROJECT }}/${{ inputs.GCP_REPO }}/${{ inputs.IMAGE_NAME }}:$(echo $GITHUB_SHA | cut -c1-7)"
+        docker build -t "$IMAGE_TAG" .
+        docker push "$IMAGE_TAG"
+
+        DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_TAG")
+
+        echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        echo "IMAGE_DIGEST=$DIGEST" >> "$GITHUB_OUTPUT"
+
+    - name: Set Outputs
+      id: set-outputs
+      shell: bash
+      run: |
+        echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+        echo "image_digest=${DIGEST}" >> "$GITHUB_OUTPUT"
