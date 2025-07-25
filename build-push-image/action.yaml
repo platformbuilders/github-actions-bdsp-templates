@@ -22,6 +22,9 @@ inputs:
     description: 'Tag da imagem no GCP'
     required: false
     default: 'latest'
+  GCP_CREDENTIALS:
+    description: 'Credenciais do serviço GCP (JSON)'
+    required: true
 
 runs:
   using: 'composite'
@@ -29,7 +32,7 @@ runs:
     - name: Autenticar com o Google Cloud
       uses: google-github-actions/auth@v2
       with:
-        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+        credentials_json: '${{ inputs.GCP_CREDENTIALS }}'
 
     - name: Configurar Docker para Artifact Registry
       shell: bash
