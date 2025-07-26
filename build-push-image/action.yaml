@@ -24,7 +24,7 @@ inputs:
     default: 'latest'
   GCP_CREDENTIALS:
     description: 'Credenciais do serviço GCP (JSON)'
-    required: true
+    required: false
   GCP_SERVICE_ACCOUNT_KEY:
     description: 'Chave da service account do GCP'
     required: false
