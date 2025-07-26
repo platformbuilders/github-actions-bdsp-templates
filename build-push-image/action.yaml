@@ -46,6 +46,6 @@ runs:
         echo "Executando imagem $IMAGE com bind no diretório do repositório"
 
         docker run --rm \
-          -v "${{ github.workspace }}:/workspace" \
+          -v "${{ github.workspace }}:/github/workspace" \
           -w /github/workspace \
           "$IMAGE"
