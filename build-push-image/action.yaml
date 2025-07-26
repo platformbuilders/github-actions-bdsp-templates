@@ -25,18 +25,24 @@ inputs:
   GCP_CREDENTIALS:
     description: 'Credenciais do serviço GCP (JSON)'
     required: false
+    default: ''
   GCP_SERVICE_ACCOUNT_KEY:
     description: 'Chave da service account do GCP'
     required: false
+    default: ''
   AWS_SERVICE_ACCOUNT_KEY:
     description: 'Chave da AWS (conta padrão)'
     required: false
+    default: ''
   AWS_SERVICE_ACCOUNT_KEY_PRD:
     description: 'Chave da AWS (conta PRD)'
     required: false
+    default: ''
   DEPLOY_PROVIDER:
     description: 'Provedor de deploy'
     required: false
+    default: 'GCP'
+
     
 runs:
   using: 'composite'
