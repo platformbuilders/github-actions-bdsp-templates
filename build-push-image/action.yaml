@@ -25,7 +25,19 @@ inputs:
   GCP_CREDENTIALS:
     description: 'Credenciais do serviço GCP (JSON)'
     required: true
-
+  GCP_SERVICE_ACCOUNT_KEY:
+    description: 'Chave da service account do GCP'
+    required: false
+  AWS_SERVICE_ACCOUNT_KEY:
+    description: 'Chave da AWS (conta padrão)'
+    required: false
+  AWS_SERVICE_ACCOUNT_KEY_PRD:
+    description: 'Chave da AWS (conta PRD)'
+    required: false
+  DEPLOY_PROVIDER:
+    description: 'Provedor de deploy'
+    required: false
+    
 runs:
   using: 'composite'
   steps:
@@ -48,4 +60,8 @@ runs:
         docker run --rm \
           -v "${{ github.workspace }}:/github/workspace" \
           -w /github/workspace \
+          -e GCP_SERVICE_ACCOUNT_KEY="${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}" \
+          -e AWS_SERVICE_ACCOUNT_KEY="${{ inputs.AWS_SERVICE_ACCOUNT_KEY }}" \
+          -e AWS_SERVICE_ACCOUNT_KEY_PRD="${{ inputs.AWS_SERVICE_ACCOUNT_KEY_PRD }}" \
+          -e DEPLOY_PROVIDER="${{ inputs.DEPLOY_PROVIDER }}" \
           "$IMAGE"
