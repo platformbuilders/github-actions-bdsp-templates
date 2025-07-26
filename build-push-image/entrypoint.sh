@@ -3,7 +3,6 @@
 set -e
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
-git config --global --add safe.directory /workspace
 # Adicionar o diretório workspace à lista de diretórios seguros
 git config --global --add safe.directory /github/workspace
 
