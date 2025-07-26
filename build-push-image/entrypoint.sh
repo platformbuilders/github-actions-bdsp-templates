@@ -6,6 +6,7 @@ echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
 # Adicionar o diretório workspace à lista de diretórios seguros
 git config --global --add safe.directory /github/workspace
+git config --global --add safe.directory /workspace
 
 # Get short SHA
 SHORT_SHA=$(git rev-parse --short=7 HEAD)
