@@ -47,5 +47,5 @@ runs:
 
         docker run --rm \
           -v "${{ github.workspace }}:/workspace" \
-          -w /workspace \
+          -w /github/workspace \
           "$IMAGE"
