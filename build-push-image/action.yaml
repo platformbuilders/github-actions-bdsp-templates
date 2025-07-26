@@ -1,73 +1,10 @@
-name: 'Run Docker Image from GCR'
-description: 'Runs a predefined Docker image from Google Artifact Registry (GCR) to build and push an application.'
-
-inputs:
-  GCP_PROJECT:
-    description: 'ID do projeto GCP'
-    required: false
-    default: 'bdsp-devtools'
-  GCP_LOCATION:
-    description: 'Região do Artifact Registry (ex: us-central1)'
-    required: false
-    default: 'us-central1'
-  GCP_REPO:
-    description: 'Nome do repositório do Artifact Registry'
-    required: false
-    default: 'build-push-images'
-  IMAGE_NAME:
-    description: 'Nome da imagem no GCP (sem tag)'
-    required: false
-    default: 'build-push-image'
-  IMAGE_TAG:
-    description: 'Tag da imagem no GCP'
-    required: false
-    default: 'latest'
-  GCP_CREDENTIALS:
-    description: 'Credenciais do serviço GCP (JSON)'
-    required: false
-    default: ''
-  GCP_SERVICE_ACCOUNT_KEY:
-    description: 'Chave da service account do GCP'
-    required: false
-    default: ''
-  AWS_SERVICE_ACCOUNT_KEY:
-    description: 'Chave da AWS (conta padrão)'
-    required: false
-    default: ''
-  AWS_SERVICE_ACCOUNT_KEY_PRD:
-    description: 'Chave da AWS (conta PRD)'
-    required: false
-    default: ''
-  DEPLOY_PROVIDER:
-    description: 'Provedor de deploy'
-    required: false
-    default: 'GCP'
-
-    
+name: 'Build and Push Docker Image to GCR'
+description: 'Builds and pushes a Docker image to Google Container Registry (GCR) based on the branch.'
 runs:
-  using: 'composite'
-  steps:
-    - name: Autenticar com o Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: '${{ inputs.GCP_CREDENTIALS }}'
-
-    - name: Configurar Docker para Artifact Registry
-      shell: bash
-      run: |
-        gcloud auth configure-docker ${{ inputs.GCP_LOCATION }}-docker.pkg.dev --quiet
-
-    - name: Executar imagem Docker
-      shell: bash
-      run: |
-        IMAGE="${{ inputs.GCP_LOCATION }}-docker.pkg.dev/${{ inputs.GCP_PROJECT }}/${{ inputs.GCP_REPO }}/${{ inputs.IMAGE_NAME }}:${{ inputs.IMAGE_TAG }}"
-        echo "Executando imagem $IMAGE com bind no diretório do repositório"
-
-        docker run --rm \
-          -v "${{ github.workspace }}:/github/workspace" \
-          -w /github/workspace \
-          -e GCP_SERVICE_ACCOUNT_KEY="${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}" \
-          -e AWS_SERVICE_ACCOUNT_KEY="${{ inputs.AWS_SERVICE_ACCOUNT_KEY }}" \
-          -e AWS_SERVICE_ACCOUNT_KEY_PRD="${{ inputs.AWS_SERVICE_ACCOUNT_KEY_PRD }}" \
-          -e DEPLOY_PROVIDER="${{ inputs.DEPLOY_PROVIDER }}" \
-          "$IMAGE"
+  using: 'docker'
+  image: 'Dockerfile'
+outputs:
+  IMAGE_TAG:
+    description: 'Tag da imagem Docker.'
+  IMAGE_DIGEST:
+    description: 'Digest da imagem Docker.'
