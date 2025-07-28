@@ -6,7 +6,7 @@ inputs:
     description: 'GitHub Token para acessar registry privado'
     required: false
     default: ${{ github.token }}
-
+ 
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
