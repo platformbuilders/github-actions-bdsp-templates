@@ -3,6 +3,9 @@ description: 'Builds and pushes a Docker image to Google Container Registry (GCR
 runs:
   using: 'docker'
   image: 'docker://ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest'
+  credentials:
+    username: ${{ github.actor }}
+    password: ${{ secrets.GITHUB_TOKEN }}
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
