@@ -48,6 +48,7 @@ runs:
       shell: bash
       run: |
         OUTPUT_FILE=$(mktemp)
+        chmod 666 "$OUTPUT_FILE"
         
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
