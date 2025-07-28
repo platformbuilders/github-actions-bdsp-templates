@@ -241,7 +241,7 @@ jobs:
       
     steps:
       - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests-hml@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests-hml@add/workflow-aws-applications
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
