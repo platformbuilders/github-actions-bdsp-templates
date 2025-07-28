@@ -193,13 +193,22 @@ jobs:
         # uses: sonarsource/sonarqube-quality-gate-action@master
         # env:
           # SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
-
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN_GITHUB}}
+      
+      - name: Pull base image
+        run: docker pull ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
+  
       - name: Build and Push Docker image to GCR
         id: build_push
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@main
-        env:
-          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
+        with:
+          GCP_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          
       - name: Run Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -228,6 +237,11 @@ jobs:
     needs: CI
     if: ${{success() }}
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      
     steps:
       - name: Kustomize Argo Manifests
         uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests-hml@main
