@@ -71,6 +71,11 @@ jobs:
 
   CI:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
       IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
@@ -193,12 +198,13 @@ jobs:
         # uses: sonarsource/sonarqube-quality-gate-action@master
         # env:
           # SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
-  
+
       - name: Build and Push Docker image to GCR
         id: build_push
-        uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@add/workflow-aws-applications
-        with:
-          GCP_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@main
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          DEPLOY_PROVIDER: "GCP"
           
       - name: Run Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
