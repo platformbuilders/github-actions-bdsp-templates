@@ -51,16 +51,13 @@ runs:
         docker pull ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
     
  
-    - name: Run build and push
+   - name: Run build and push
       id: build
       shell: bash
       run: |
-        # Execute a lógica original usando a imagem como base
-        # Monte o workspace no caminho esperado pelo seu entrypoint (/github/workspace)
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
           -e GITHUB_TOKEN="${{ inputs.github_token }}" \
           -e GITHUB_ACTOR="${{ github.actor }}" \
           -e GITHUB_REPOSITORY \
@@ -78,4 +75,5 @@ runs:
           -e DEPLOY_PROVIDER \
           -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
+        
         
