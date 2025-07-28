@@ -90,7 +90,7 @@ if [ $DEPLOY_PROVIDER == "GCP" ]; then
   # Autenticar o gcloud
   gcloud auth activate-service-account --key-file=gcp-sa.json
   # Configurar o Docker para autenticar com o GCR
-  gcloud auth configure-docker us-docker.pkg.dev
+  gcloud auth configure-docker us-docker.pkg.dev --quiet
 elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   # Autenticar o AWS CLI
   aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile hml
