@@ -50,12 +50,13 @@ runs:
       run: |
         docker pull ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
     
+ 
     - name: Run build and push
       id: build
       shell: bash
       run: |
         # Execute a lógica original usando a imagem como base
-        # Todas as variáveis de ambiente do workflow ficam disponíveis
+        # Monte o workspace no caminho esperado pelo seu entrypoint (/github/workspace)
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
@@ -69,12 +70,12 @@ runs:
           -e GITHUB_HEAD_REF \
           -e GITHUB_BASE_REF \
           -e GITHUB_EVENT_NAME \
-          -e GITHUB_WORKSPACE="/workspace" \
+          -e GITHUB_WORKSPACE="/github/workspace" \
           -e SHORT_SHA \
           -e GCP_SERVICE_ACCOUNT_KEY \
           -e AWS_SERVICE_ACCOUNT_KEY \
           -e AWS_SERVICE_ACCOUNT_KEY_PRD \
           -e DEPLOY_PROVIDER \
-          -w /workspace \
+          -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
         
