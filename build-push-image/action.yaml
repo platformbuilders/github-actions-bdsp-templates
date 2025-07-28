@@ -47,7 +47,9 @@ runs:
       id: build
       shell: bash
       run: |
-        OUTPUT_FILE=$(mktemp)
+        TEMP_DIR=$(mktemp -d)
+        OUTPUT_FILE="$TEMP_DIR/github_output.txt"
+        touch "$OUTPUT_FILE"
         chmod 666 "$OUTPUT_FILE"
         
         docker run --rm \
