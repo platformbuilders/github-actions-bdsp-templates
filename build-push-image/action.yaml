@@ -6,7 +6,7 @@ inputs:
     description: 'GitHub Token para acessar registry privado'
     required: false
     default: ${{ github.token }}
- 
+
 outputs:
   IMAGE_TAG:
     description: 'Tag da imagem Docker.'
@@ -22,13 +22,6 @@ runs:
       id: vars
       shell: bash
       run: |
-        # Gerar SHORT_SHA se não existir
-        if [ -z "$SHORT_SHA" ]; then
-          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
-          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
-        fi
-        
-        # Garantir que GITHUB_REF_NAME esteja disponível
         if [ -z "$GITHUB_REF_NAME" ]; then
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             GITHUB_REF_NAME="${GITHUB_HEAD_REF}"
@@ -50,16 +43,16 @@ runs:
       run: |
         docker pull ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
     
- 
-    
     - name: Run build and push
       id: build
       shell: bash
       run: |
-        # Execute a lógica original usando a imagem como base
+        OUTPUT_FILE=$(mktemp)
+        
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
+          -v "$OUTPUT_FILE":/tmp/github_output.txt \
           -e GITHUB_TOKEN="${{ inputs.github_token }}" \
           -e GITHUB_ACTOR="${{ github.actor }}" \
           -e GITHUB_REPOSITORY \
@@ -70,6 +63,7 @@ runs:
           -e GITHUB_BASE_REF \
           -e GITHUB_EVENT_NAME \
           -e GITHUB_WORKSPACE="/github/workspace" \
+          -e GITHUB_OUTPUT="/tmp/github_output.txt" \
           -e SHORT_SHA \
           -e GCP_SERVICE_ACCOUNT_KEY \
           -e AWS_SERVICE_ACCOUNT_KEY \
@@ -84,4 +78,8 @@ runs:
           -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
         
+        if [ -f "$OUTPUT_FILE" ]; then
+          cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT
+        fi
         
+        rm -f "$OUTPUT_FILE"
