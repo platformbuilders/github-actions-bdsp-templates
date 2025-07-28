@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to GCP
+name: Build and Push Docker Image to GHCR
 
 on:
   push:
@@ -12,25 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      packages: write
       contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-          project_id: '${{ secrets.GCP_PROJECT_ID }}'
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Configure Docker for Artifact Registry
+      - name: Build Docker image
         run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+          IMAGE="ghcr.io/${{ github.repository }}/build-push-image:latest"
+          docker build -t $IMAGE ./build-push-image
 
-      - name: Build and Push Docker image to Artifact Registry
-        env:
-          IMAGE_NAME: us-central1-docker.pkg.dev/bdsp-devtools/build-push-images/build-push-image:latest
+      - name: Push Docker image to GHCR
         run: |
-          docker build -t $IMAGE_NAME ./build-push-image
-          docker push $IMAGE_NAME
+          IMAGE="ghcr.io/${{ github.repository}}/build-push-image:latest"
+          docker push $IMAGE
