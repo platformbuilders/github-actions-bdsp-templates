@@ -217,9 +217,7 @@ jobs:
           AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
-      - name: echo output
-        run: echo ${{ steps.build_push.outputs.IMAGE_URI }}
-        
+       
       - name: Run Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
