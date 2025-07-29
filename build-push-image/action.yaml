@@ -1,5 +1,5 @@
-name: 'Build and Push Docker Image to GCR'
-description: 'Builds and pushes a Docker image to Google Container Registry (GCR) based on the branch.'
+name: 'Build and Push Docker Image'
+description: 'Builds and pushes a Docker image to Registry based on the branch.'
 
 inputs:
   github_token:
@@ -21,19 +21,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up variables
-      id: vars
-      shell: bash
-      run: |
-        if [ -z "$GITHUB_REF_NAME" ]; then
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            GITHUB_REF_NAME="${GITHUB_HEAD_REF}"
-          else
-            GITHUB_REF_NAME="${GITHUB_REF#refs/heads/}"
-          fi
-          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
-        fi
-    
     - name: Login to GHCR
       uses: docker/login-action@v3
       with:
@@ -50,14 +37,12 @@ runs:
       id: build
       shell: bash
       run: |
-        # Criar diretório temporário para outputs
         mkdir -p /tmp/outputs
         TEMP_DIR=/tmp/outputs
         chmod 777 -R "$TEMP_DIR"
         
         echo "Diretório temporário criado: $TEMP_DIR"
         
-        # Execute a lógica original usando a imagem como base
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
