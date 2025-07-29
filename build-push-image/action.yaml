@@ -85,4 +85,3 @@ runs:
           cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT
         fi
         
-        rm -f "$OUTPUT_FILE"
