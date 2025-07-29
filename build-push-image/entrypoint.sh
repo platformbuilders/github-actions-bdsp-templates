@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-
+chmod 666 /tmp/outputs/github_output.txt
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 # Adicionar o diretório workspace à lista de diretórios seguros
 git config --global --add safe.directory /github/workspace
