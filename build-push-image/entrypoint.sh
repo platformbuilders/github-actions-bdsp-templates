@@ -133,9 +133,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
       IMAGE_TAG="$SHORT_SHA" 
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$SHORT_SHA"
 
-      echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
-      echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
-      echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
+      echo "$IMAGE_TAG" > /tmp/image_tag.txt
+      echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
+      echo "$IMAGE_URI" > /tmp/image_uri.txt
       echo "Outputs definidos"
 
       echo "Build e push concluídos para frontend em $GITHUB_REF_NAME."
@@ -182,8 +182,8 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
          echo "Linha processada: '$LATEST_IMAGE_LINE'"
          exit 1
       fi
-        echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
-        echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
+        echo "$IMAGE_TAG" > /tmp/image_tag.txt
+        echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
         echo "Outputs definidos."
 
   fi
@@ -211,9 +211,9 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
       IMAGE_TAG="$SHORT_SHA"
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
     
-      echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
-      echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
-      echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
+      echo "$IMAGE_TAG" > /tmp/image_tag.txt
+      echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
+      echo "$IMAGE_URI" > /tmp/image_uri.txt
       echo "Outputs definidos"
 
       echo "Build e push concluídos para frontend em $GITHUB_REF_NAME."
@@ -258,9 +258,9 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
     IMAGE_TAG="$SHORT_SHA"
     IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
 
-    echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
-    echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
-    echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
+    echo "$IMAGE_TAG" > /tmp/image_tag.txt
+    echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
+    echo "$IMAGE_URI" > /tmp/image_uri.txt
     echo "Outputs definidos"
   fi
 
@@ -284,9 +284,9 @@ else
   IMAGE_TAG="$SHORT_SHA"
   IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
 
-  echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
-  echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
-  echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
+  echo "$IMAGE_TAG" > /tmp/image_tag.txt
+  echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
+  echo "$IMAGE_URI" > /tmp/image_uri.txt
   echo "Outputs definidos"
 fi
 
@@ -304,5 +304,5 @@ elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
 fi
 
   echo "Script de build e push concluído com sucesso."
-  echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+  echo "$IMAGE_TAG" > /tmp/image_tag.txt
 

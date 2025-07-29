@@ -48,7 +48,8 @@ runs:
       shell: bash
       run: |
         # Criar diretório temporário para outputs
-        TEMP_DIR=$(mktemp -d)
+        mkdir -p /temp
+        TEMP_DIR=/temp
         chmod 777 "$TEMP_DIR"
         
         echo "Diretório temporário criado: $TEMP_DIR"
@@ -57,7 +58,7 @@ runs:
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v "$TEMP_DIR":/tmp/outputs \
+          -v "$TEMP_DIR":/tmp \
           -e GITHUB_TOKEN="${{ inputs.github_token }}" \
           -e GITHUB_ACTOR="${{ github.actor }}" \
           -e GITHUB_REPOSITORY \
