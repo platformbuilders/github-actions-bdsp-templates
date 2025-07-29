@@ -2,7 +2,7 @@
 
 set -e
 
-chmod 666 /tmp/outputs/github_output.txt
+chmod 666 -R /tmp/
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 # Adicionar o diretório workspace à lista de diretórios seguros
