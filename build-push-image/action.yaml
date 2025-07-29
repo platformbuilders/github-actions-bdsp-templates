@@ -14,6 +14,9 @@ outputs:
   IMAGE_DIGEST:
     description: 'Digest da imagem Docker.'
     value: ${{ steps.build.outputs.image_digest }}
+  IMAGE_URI:
+    description: 'URI da imagem Docker.'
+    value: ${{ steps.build.outputs.IMAGE_URI }}
 
 runs:
   using: 'composite'
