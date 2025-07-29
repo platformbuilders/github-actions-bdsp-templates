@@ -48,9 +48,9 @@ runs:
       shell: bash
       run: |
         # Criar diretório temporário para outputs
-        mkdir -p /temp
-        TEMP_DIR=/temp
-        chmod 777 "$TEMP_DIR"
+        mkdir -p /tmp/outputs
+        TEMP_DIR=/temp/outputs
+        chmod 777 -R "$TEMP_DIR"
         
         echo "Diretório temporário criado: $TEMP_DIR"
         
