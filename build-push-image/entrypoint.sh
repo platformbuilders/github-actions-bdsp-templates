@@ -2,7 +2,7 @@
 
 set -e
 
-chmod 666 -R /tmp/
+chmod 777 -R /tmp/
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 # Adicionar o diretório workspace à lista de diretórios seguros
@@ -133,9 +133,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
       IMAGE_TAG="$SHORT_SHA" 
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$SHORT_SHA"
 
-      echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-      echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-      echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+      echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+      echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
+      echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
       echo "Outputs definidos"
 
       echo "Build e push concluídos para frontend em $GITHUB_REF_NAME."
@@ -182,9 +182,8 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
          echo "Linha processada: '$LATEST_IMAGE_LINE'"
          exit 1
       fi
-
-        echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-        echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+        echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+        echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
         echo "Outputs definidos."
 
   fi
@@ -212,9 +211,9 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
       IMAGE_TAG="$SHORT_SHA"
       IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
     
-      echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-      echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-      echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+      echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+      echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
+      echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
       echo "Outputs definidos"
 
       echo "Build e push concluídos para frontend em $GITHUB_REF_NAME."
@@ -259,9 +258,9 @@ elif [[ "$GITHUB_REF_NAME" =~ ^release/ || "$GITHUB_REF_NAME" == "staging" || "$
     IMAGE_TAG="$SHORT_SHA"
     IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
 
-    echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-    echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-    echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+    echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+    echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
+    echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
     echo "Outputs definidos"
   fi
 
@@ -285,9 +284,9 @@ else
   IMAGE_TAG="$SHORT_SHA"
   IMAGE_URI="$REPOSITORY_URI_BRANCH:$IMAGE_TAG"
 
-  echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-  echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-  echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_OUTPUT"
+  echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
+  echo "$IMAGE_DIGEST" > /tmp/outputs/image_digest.txt  
+  echo "$IMAGE_URI" > /tmp/outputs/image_uri.txt
   echo "Outputs definidos"
 fi
 
@@ -304,6 +303,6 @@ elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
     unset AWS_REGION_PRD
 fi
 
-echo "Script de build e push concluído com sucesso."
-echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+  echo "Script de build e push concluído com sucesso."
+  echo "$IMAGE_TAG" > /tmp/outputs/image_tag.txt
 

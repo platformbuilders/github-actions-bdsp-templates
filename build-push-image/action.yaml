@@ -47,11 +47,13 @@ runs:
       id: build
       shell: bash
       run: |
+        # Criar diretório temporário para outputs
         TEMP_DIR=$(mktemp -d)
-        OUTPUT_FILE="$TEMP_DIR/github_output.txt"
-        touch "$OUTPUT_FILE"
-        chmod 666 "$OUTPUT_FILE"
+        chmod 777 "$TEMP_DIR"
         
+        echo "Diretório temporário criado: $TEMP_DIR"
+        
+        # Execute a lógica original usando a imagem como base
         docker run --rm \
           -v ${{ github.workspace }}:/github/workspace \
           -v /var/run/docker.sock:/var/run/docker.sock \
@@ -66,7 +68,6 @@ runs:
           -e GITHUB_BASE_REF \
           -e GITHUB_EVENT_NAME \
           -e GITHUB_WORKSPACE="/github/workspace" \
-          -e GITHUB_OUTPUT="/tmp/outputs/github_output.txt" \
           -e SHORT_SHA \
           -e GCP_SERVICE_ACCOUNT_KEY \
           -e AWS_SERVICE_ACCOUNT_KEY \
@@ -81,7 +82,33 @@ runs:
           -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
         
-        if [ -f "$OUTPUT_FILE" ]; then
-          cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT
+        echo "Container executado. Verificando arquivos de output..."
+        ls -la "$TEMP_DIR/"
+        
+        # Capturar outputs dos arquivos individuais
+        if [ -f "$TEMP_DIR/image_tag.txt" ]; then
+          IMAGE_TAG=$(cat "$TEMP_DIR/image_tag.txt")
+          echo "IMAGE_TAG encontrado: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_tag.txt não encontrado"
         fi
         
+        if [ -f "$TEMP_DIR/image_digest.txt" ]; then
+          IMAGE_DIGEST=$(cat "$TEMP_DIR/image_digest.txt")
+          echo "IMAGE_DIGEST encontrado: $IMAGE_DIGEST"
+          echo "image_digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_digest.txt não encontrado"
+        fi
+        
+        if [ -f "$TEMP_DIR/image_uri.txt" ]; then
+          IMAGE_URI=$(cat "$TEMP_DIR/image_uri.txt")
+          echo "IMAGE_URI encontrado: $IMAGE_URI"
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_uri.txt não encontrado"
+        fi
+        
+        # Limpar diretório temporário
+        rm -rf "$TEMP_DIR"
