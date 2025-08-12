@@ -102,6 +102,7 @@ jobs:
           base: origin/master     # branch de destino
           head: ${{ github.sha }}  # commit atual do PR
           extra_args: >
+            --fail-verified
             --only-verified
             --log-level=2
 
