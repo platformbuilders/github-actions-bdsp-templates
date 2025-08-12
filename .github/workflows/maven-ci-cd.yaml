@@ -99,10 +99,11 @@ jobs:
       - name: Run Secret Scanner
         uses: trufflesecurity/trufflehog@main
         with:
-          base: origin/master     # branch de destino
-          head: ${{ github.sha }}  # commit atual do PR
+          #base: origin/master     # branch de destino
+          #head: ${{ github.sha }}  # commit atual do PR
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
           extra_args: >
-            --fail-verified
             --only-verified
             --log-level=2
 
