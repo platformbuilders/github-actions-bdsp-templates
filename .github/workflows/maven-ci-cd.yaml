@@ -236,7 +236,7 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
           path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
-          retention-days: 3
+          retention-days: 7
 
   
       - name: "Notify Slack: Failure (CI)"
