@@ -96,14 +96,24 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
-      #- name: Run Secret Scanner
-      #  uses: trufflesecurity/trufflehog@main
-      #  with:
-      #    base: origin/master     # branch de destino
-      #    head: ${{ github.sha }}  # commit atual do PR
-       #   extra_args: >
-       #     --only-verified
-       #     --log-level=2
+      - name: Run Secret Scanner
+        uses: trufflesecurity/trufflehog@main
+        with:
+          base: origin/master     # branch de destino
+          head: ${{ github.sha }}  # commit atual do PR
+          extra_args: >
+            --only-verified
+            --log-level=2
+             --json \
+             > "${{ github.event.repository.name }}-${{ github.sha }}-secret-scanner-report.json"
+
+      # Faz upload do relatório como artefato
+      - name: Upload Secret Scanner Report (JSON)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ github.sha }}-secret-scanner-report
+          path: ${{ github.event.repository.name }}-${{ github.sha }}-secret-scanner-report.json
+          retention-days: 3
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v3
