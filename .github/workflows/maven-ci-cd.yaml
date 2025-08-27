@@ -124,14 +124,11 @@ jobs:
 
       - name: Save Secret Scanner Report (JSON)
         run: |
-          trufflehog git \
-            --base origin/master \
-            --head ${{ github.sha }} \
+          trufflehog git file://. \
             --only-verified \
-            --log-level=2 \
             --json \
             > "${{ github.event.repository.name }}-${{ github.sha }}-secret-scanner-report.json"
-
+            
       - name: Upload Secret Scanner Report
         uses: actions/upload-artifact@v4
         with:
