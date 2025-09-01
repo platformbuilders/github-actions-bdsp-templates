@@ -127,8 +127,10 @@ jobs:
       - name: Upload Secret Scanner Report
         uses: actions/upload-artifact@v4
         with:
-          name:  ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report
-          path:  ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.json
+          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report
+          path: |
+            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.json
+            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.log
           retention-days: 3
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
