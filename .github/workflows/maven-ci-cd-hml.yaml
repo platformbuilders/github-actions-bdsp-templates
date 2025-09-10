@@ -240,7 +240,7 @@ jobs:
       
     steps:
       - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests-hml@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@migration-bitbucket-pnb
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
