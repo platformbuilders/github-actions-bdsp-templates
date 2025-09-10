@@ -120,7 +120,7 @@ git commit -m "$COMMIT_MESSAGE"
 echo "Pushing to origin/${TARGET_PUSH_BRANCH}..."
 git push origin "$TARGET_PUSH_BRANCH"
 
-if [[ "$IS_PROD_FLOW" == true ]]; then
+#if [[ "$IS_PROD_FLOW" == true ]]; then
   echo "Production flow detected. Creating Bitbucket Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
 
   BITBUCKET_REPO_API_SLUG=$(echo "$ARGO_MANIFESTS_REPO_SLUG" | cut -d'/' -f2-)
@@ -150,4 +150,4 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
 }
 EOF
 
-fi
+#fi
