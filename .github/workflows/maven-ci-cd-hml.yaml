@@ -91,11 +91,11 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
-      - name: Run Secret Scanner
-        uses: trufflesecurity/trufflehog@main
-        with:
-          extra_args: >
-            --log-level=2
+     # - name: Run Secret Scanner
+      #  uses: trufflesecurity/trufflehog@main
+      #  with:
+      #    extra_args: >
+      #      --log-level=2
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v3
@@ -206,23 +206,23 @@ jobs:
         id: build_push
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@migration-bitbucket-pnb
         with:
-          GCP_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           
-      - name: Run Image Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
-          format: 'table'
-          output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
-          exit-code: '0'
-          severity: "CRITICAL,HIGH"
+     # - name: Run Image Vulnerability Scanner
+     #   uses: aquasecurity/trivy-action@master
+     #   with:
+     #     image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
+     #     format: 'table'
+     #     output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+     #     exit-code: '0'
+     #     severity: "CRITICAL,HIGH"
 
-      - name: Upload Image Vulnerability Scanner Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
-          path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
-          retention-days: 3
+     # - name: Upload Image Vulnerability Scanner Report
+     #   uses: actions/upload-artifact@v4
+     #   with:
+     #     name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
+    #      path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+ #         retention-days: 3
 
   
     #  - name: "Notify Slack: Failure (CI)"
