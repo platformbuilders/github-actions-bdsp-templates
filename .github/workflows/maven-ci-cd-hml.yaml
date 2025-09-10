@@ -57,6 +57,7 @@ on:
 
 
 env:
+  DEPLOY_PROVIDER: ${{inputs.DEPLOY_PROVIDER }}
   JAVA_VERSION: ${{ inputs.java_version }}
   SONAR_LANGUAGE: "java"
   SONAR_MAIN_BRANCH: "master"
@@ -257,6 +258,7 @@ jobs:
           bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
      
     #   - name: "Notify Slack: Success (CI/CD Non-Prod)"
