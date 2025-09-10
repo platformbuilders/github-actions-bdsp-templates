@@ -35,6 +35,9 @@ on:
       TOKEN_GITHUB:
         description: 'Token do GitHub para automação'
         required: true
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
+        required: true
 
     outputs:
       IMAGE_TAG:
@@ -246,6 +249,7 @@ jobs:
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
 

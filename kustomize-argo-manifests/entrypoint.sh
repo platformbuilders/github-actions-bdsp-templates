@@ -3,7 +3,7 @@
 set -euo pipefail
 IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
-GITHUB_TOKEN="$3"
+BITBUCKET_TOKEN="$3"
 REPOSITORY_NAME=$(basename "$4")
 
 ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/pnb-pefisa-gitops-manifests"
@@ -53,7 +53,7 @@ fi
 
 # Clone manifests repo
 echo "Cloning Bitbucket repo..."
-git clone "https://x-bitbucket-api-token-auth:${GITHUB_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
+git clone "https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
 cd "${ARGO_MANIFESTS_REPO_DIR}"
 
 if [[ "$IS_PROD_FLOW" == true ]]; then
@@ -130,7 +130,7 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
 
   curl -X POST "$BITBUCKET_API_URL" \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+    -H "Authorization: Bearer ${BITBUCKET_TOKEN}" \
     -d @- << EOF
 {
   "title": "${PR_TITLE}",
