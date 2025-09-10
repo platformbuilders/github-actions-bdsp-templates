@@ -34,14 +34,8 @@ REPOSITORY_URI_PRD="us-central1-docker.pkg.dev/bdsp-devtools/$REPOSITORY_NAME/ma
 echo "REPOSITORY_URI_BRANCH: $REPOSITORY_URI_BRANCH"
 echo "REPOSITORY_URI_PRD: $REPOSITORY_URI_PRD"
 
-# Validar se a secret está em Base64
-if echo "$GCP_SERVICE_ACCOUNT_KEY" | base64 -d &>/dev/null; then
-    echo "Decodificando secret em Base64..."
-    echo "$GCP_SERVICE_ACCOUNT_KEY" | base64 -d > gcp-sa.json
-else
-    echo "Secret já está no formato correto, salvando diretamente..."
-    echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-sa.json
-fi
+echo "$GCP_SERVICE_ACCOUNT_KEY" > gcp-sa.json
+
 
 # Autenticar o gcloud
 gcloud auth activate-service-account --key-file=gcp-sa.json
