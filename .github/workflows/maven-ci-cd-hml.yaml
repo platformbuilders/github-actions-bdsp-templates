@@ -205,7 +205,7 @@ jobs:
       - name: Build and Push Docker image to GCR
         id: build_push
         uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@migration-bitbucket-pnb
-        with:
+        env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           
      # - name: Run Image Vulnerability Scanner
