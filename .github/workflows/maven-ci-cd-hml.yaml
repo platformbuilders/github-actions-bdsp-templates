@@ -204,7 +204,7 @@ jobs:
 
       - name: Build and Push Docker image to GCR
         id: build_push
-        uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@main
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image-hml@migration-bitbucket-pnb
         with:
           GCP_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           
