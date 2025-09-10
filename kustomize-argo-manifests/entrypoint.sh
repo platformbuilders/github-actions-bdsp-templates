@@ -13,7 +13,7 @@ ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 TARGET_OVERLAY_DIR=""
 TARGET_MANIFEST_BRANCH="main"
 PR_BASE_BRANCH=""
-IS_PROD_FLOW=false
+IS_PROD_FLOW=true
 
 case "$GITHUB_REF_NAME" in
   "main"|"master")
@@ -23,11 +23,11 @@ case "$GITHUB_REF_NAME" in
     ;;
   "staging"|"homolog"|release/*)
     TARGET_OVERLAY_DIR="homolog"
-    IS_PROD_FLOW=false
+    IS_PROD_FLOW=true
     ;;
   "develop")
     TARGET_OVERLAY_DIR="develop"
-    IS_PROD_FLOW=false
+    IS_PROD_FLOW=true
     ;;
   *)
     echo "No action needed for source branch '$GITHUB_REF_NAME'."
@@ -120,7 +120,7 @@ git commit -m "$COMMIT_MESSAGE"
 echo "Pushing to origin/${TARGET_PUSH_BRANCH}..."
 git push origin "$TARGET_PUSH_BRANCH"
 
-#if [[ "$IS_PROD_FLOW" == true ]]; then
+if [[ "$IS_PROD_FLOW" == true ]]; then
   echo "Production flow detected. Creating Bitbucket Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
 
   BITBUCKET_REPO_API_SLUG=$(echo "$ARGO_MANIFESTS_REPO_SLUG" | cut -d'/' -f2-)
@@ -150,4 +150,4 @@ git push origin "$TARGET_PUSH_BRANCH"
 }
 EOF
 
-#fi
+fi
