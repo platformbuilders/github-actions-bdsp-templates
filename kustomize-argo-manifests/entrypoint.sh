@@ -3,8 +3,9 @@
 set -euo pipefail
 IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
-BITBUCKET_TOKEN="$3"
+GITHUB_TOKEN="$3"
 REPOSITORY_NAME=$(basename "$4")
+BITBUCKET_TOKEN="$5"
 
 ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/pnb-pefisa-gitops-manifests"
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
