@@ -26,6 +26,10 @@ on:
         description: 'URL do host do SonarQube'
         required: false
         type: string
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: true
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -256,6 +260,7 @@ jobs:
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
           bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
