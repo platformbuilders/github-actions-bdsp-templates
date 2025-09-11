@@ -29,4 +29,4 @@ runs:
     - ${{ inputs.github-token }}
     - ${{ inputs.repository-name }}
     - ${{ inputs.bitbucket-token }}
-    - ${{ inputs.bitbucket_username }}
+    - ${{ inputs.bitbucket-username }}
