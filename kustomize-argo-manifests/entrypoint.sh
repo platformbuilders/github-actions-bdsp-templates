@@ -130,7 +130,7 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
   PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
   PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
 
-  curl -v -X POST "$BITBUCKET_API_URL" \
+  curl -X POST "$BITBUCKET_API_URL" \
     -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
     -H "Content-Type: application/json" \
     -d @- << EOF
