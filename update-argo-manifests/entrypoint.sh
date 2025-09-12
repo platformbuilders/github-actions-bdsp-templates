@@ -85,7 +85,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
     BITBUCKET_API_URL="https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests"
       
     PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
-    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
+    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch dev . Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
     
     curl -v -X POST "$BITBUCKET_API_URL" \
       -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
@@ -96,12 +96,12 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   "description": "${PR_BODY}",
   "source": {
     "branch": {
-      "name": "${PR_HEAD_BRANCH}"
+      "name": "dev"
     }
   },
   "destination": {
     "branch": {
-      "name": "${PR_BASE_BRANCH}"
+      "name": "master"
     }
   },
   "close_source_branch": true
