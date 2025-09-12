@@ -246,26 +246,48 @@ jobs:
     needs: CI
     if: ${{success() }}
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: read
-      
+
     steps:
-      - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@migration-bitbucket-pnb
+      - name: Update Argo Manifests
+        uses: platformbuilders/github-actions-bdsp-templates/update-argo-manifests@main
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
-          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
-          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
 
-     
+#  CD:
+#    needs: CI
+#    if: ${{success() }}
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      contents: read
+#      packages: read
+#      
+#    steps:
+#      - name: Kustomize Argo Manifests
+#        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@migration-bitbucket-pnb
+#        with:
+#          image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
+#          image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
+#          github-token: ${{ secrets.TOKEN_GITHUB }}
+#          repository-name: ${{ github.repository }}
+#          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+#          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
+#        env:
+#          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+#          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+#
+#     
     #   - name: "Notify Slack: Success (CI/CD Non-Prod)"
     #     if: ${{ success() }}
     #     uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
