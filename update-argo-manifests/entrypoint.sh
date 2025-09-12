@@ -6,8 +6,6 @@ IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME="$4"
-BITBUCKET_TOKEN="$5"
-BITBUCKET_USERNAME="$6"
 
 echo "IMAGE_TAG: $IMAGE_TAG"
 echo "IMAGE_DIGEST: $IMAGE_DIGEST"
@@ -32,7 +30,7 @@ fi
 echo "TARGET_REPO: $TARGET_REPO"
 
 # Clonar o repositório de destino
-GIT_CLONE_COMMAND="git clone https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
+GIT_CLONE_COMMAND="git clone https://${GITHUB_TOKEN}@github.com/platformbuilders/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
@@ -71,29 +69,17 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   fi
 
   # Verificar se já existe um PR aberto ESPECÍFICO para dev -> master
-  EXISTING_PR=$(curl -s -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-  "https://api.bitbucket.org/2.0/repositories/pernamlabs/?state=OPEN&source.branch.name=dev&destination.branch.name=master" \
-  | jq -r '.values[0].id // empty')
+  EXISTING_PR=$(gh pr list --base master --head dev --json number --jq '.[].number' 2>/dev/null)
 
   if [[ -n "$EXISTING_PR" ]]; then
     echo "Já existe um PR aberto (PR #$EXISTING_PR)"
   else
+    # Criar PR da dev -> master
     echo "Alterações detectadas! Criando Pull Request..."
-
-  curl -s -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -X POST "${BITBUCKET_API_URL}" \
-    -d @- <<EOF
-{
-  "title": "Update deployment with image: ${IMAGE_TAG}",
-  "description": "Update deployment with image: ${IMAGE_TAG}",
-  "source": { "branch": { "name": "dev" } },
-  "destination": { "branch": { "name": "master" } },
-  "close_source_branch": false
-}
-EOF
-
-  echo "Pull Request criado!"
+    gh pr create --title "Update deployment with image: $IMAGE_TAG" \
+                 --body "Update deployment with image: $IMAGE_TAG" \
+                 --base master \
+                 --head dev
   fi
 
 
