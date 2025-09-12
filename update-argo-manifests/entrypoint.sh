@@ -33,7 +33,7 @@ ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/${TARGET_REPO}"
 echo "TARGET_REPO: $TARGET_REPO"
 
 # Clonar o repositório de destino
-GIT_CLONE_COMMAND="git clone https://${GITHUB_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
+GIT_CLONE_COMMAND="git clone https://${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
