@@ -29,11 +29,10 @@ else
   exit 1
 fi
 
-ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/${TARGET_REPO}"
 echo "TARGET_REPO: $TARGET_REPO"
 
 # Clonar o repositório de destino
-GIT_CLONE_COMMAND="git clone https://${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
+GIT_CLONE_COMMAND="git clone https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
@@ -81,7 +80,6 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   if [[ -n "$EXISTING_PR" ]]; then
     echo "Já existe um PR aberto (PR #$EXISTING_PR)"
   else
-    # Criar PR da dev -> master
     echo "Alterações detectadas! Criando Pull Request..."
     BITBUCKET_REPO_API_SLUG=$(echo "$ARGO_MANIFESTS_REPO_SLUG" | cut -d'/' -f2-)
     BITBUCKET_API_URL="https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests"
@@ -109,6 +107,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   "close_source_branch": true
 }
 EOF
+  echo "Pull Request criado!"
   fi
 
 
