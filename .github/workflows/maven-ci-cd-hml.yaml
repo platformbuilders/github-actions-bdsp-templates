@@ -252,7 +252,7 @@ jobs:
 
     steps:
       - name: Update Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/update-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/update-argo-manifests@migration-bitbucket-pnb
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
