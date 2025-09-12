@@ -73,9 +73,9 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
   # Verificar se já existe um PR aberto ESPECÍFICO para dev -> master
   EXISTING_PR=$(curl -s -G -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-                --data-urlencode 'q=state="OPEN" AND source.branch.name="'dev'" AND destination.branch.name="'main'"' \
+                --data-urlencode 'q=state="OPEN" AND source.branch.name="'dev'" AND destination.branch.name="'master'"' \
                 "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests" \
-                | jq -r 'if .size>0 then .values[0].links.html.href else "NENHUM PR ABERTO" end')
+                | jq -r 'if .size>0 then .values[0].links.html.href else "" end')
   
 
   if [[ -n "$EXISTING_PR" ]]; then
