@@ -67,6 +67,7 @@ runs:
           -e AWS_SECRET_ACCESS_KEY_PRD \
           -e AWS_REGION \
           -e AWS_REGION_PRD \
+          -e PROJECT_TYPE \
           -e DEPLOY_PROVIDER \
           -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
