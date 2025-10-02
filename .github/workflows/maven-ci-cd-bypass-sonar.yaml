@@ -141,7 +141,7 @@ jobs:
 
       - name: Build and Test with Maven
         run: |
-          mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib -DskipTests=true
+          mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib
 
       - name: Build and Push Docker Image
         id: build_push
