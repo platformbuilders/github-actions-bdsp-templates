@@ -13,6 +13,12 @@ inputs:
   github-token:
     description: 'GitHub token'
     required: true
+  bitbucket-token:
+    description: 'Bitbucket token'
+    required: true
+  bitbucket-username:
+    description: 'Bitbucket username'
+    required: true
 
 runs:
   using: 'docker'
@@ -22,3 +28,5 @@ runs:
     - ${{ inputs.image-digest }}
     - ${{ inputs.github-token }}
     - ${{ inputs.repository-name }}
+    - ${{ inputs.bitbucket-token }}
+    - ${{ inputs.bitbucket-username }}
