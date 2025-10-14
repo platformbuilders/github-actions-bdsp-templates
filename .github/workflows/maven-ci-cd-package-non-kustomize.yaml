@@ -272,8 +272,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
-          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
-          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
           
       - name: "Notify Slack: Success"
         if: ${{ success() }}

@@ -5,16 +5,14 @@ IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME=$(basename "$4")
-BITBUCKET_TOKEN="$5"
-BITBUCKET_USERNAME="$6"
 
-ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/pnb-pefisa-gitops-manifests"
+ARGO_MANIFESTS_REPO_SLUG="github.com/platformbuilders/pnb-pefisa-gitops-manifets"
 ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 
 TARGET_OVERLAY_DIR=""
 TARGET_MANIFEST_BRANCH="main"
-PR_BASE_BRANCH="main"
-IS_PROD_FLOW=true
+PR_BASE_BRANCH=""
+IS_PROD_FLOW=false
 
 case "$GITHUB_REF_NAME" in
   "main"|"master")
@@ -24,11 +22,11 @@ case "$GITHUB_REF_NAME" in
     ;;
   "staging"|"homolog"|release/*)
     TARGET_OVERLAY_DIR="homolog"
-    IS_PROD_FLOW=true
+    IS_PROD_FLOW=false
     ;;
   "develop")
     TARGET_OVERLAY_DIR="develop"
-    IS_PROD_FLOW=true
+    IS_PROD_FLOW=false
     ;;
   *)
     echo "No action needed for source branch '$GITHUB_REF_NAME'."
@@ -54,8 +52,7 @@ elif [[ $DEPLOY_PROVIDER == "AWS" && "$IS_PROD_FLOW" != "true"  ]]; then
 fi
 
 # Clone manifests repo
-echo "Cloning Bitbucket repo..."
-git clone "https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
+git clone "https://${GITHUB_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
 cd "${ARGO_MANIFESTS_REPO_DIR}"
 
 if [[ "$IS_PROD_FLOW" == true ]]; then
@@ -122,33 +119,21 @@ echo "Pushing to origin/${TARGET_PUSH_BRANCH}..."
 git push origin "$TARGET_PUSH_BRANCH"
 
 if [[ "$IS_PROD_FLOW" == true ]]; then
-  echo "Production flow detected. Creating Bitbucket Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
+  echo "Production flow detected. Creating Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
 
-  BITBUCKET_REPO_API_SLUG=$(echo "$ARGO_MANIFESTS_REPO_SLUG" | cut -d'/' -f2-)
-  BITBUCKET_API_URL="https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests"
-  
-  PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
-  PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
+  EXISTING_PR=$(gh pr list --repo "$ARGO_MANIFESTS_REPO_SLUG" --base "$PR_BASE_BRANCH" --head "$PR_HEAD_BRANCH" --json number --jq '.[].number' 2>/dev/null)
 
-  curl -X POST "$BITBUCKET_API_URL" \
-    -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d @- << EOF
-{
-  "title": "${PR_TITLE}",
-  "description": "${PR_BODY}",
-  "source": {
-    "branch": {
-      "name": "${PR_HEAD_BRANCH}"
-    }
-  },
-  "destination": {
-    "branch": {
-      "name": "${PR_BASE_BRANCH}"
-    }
-  },
-  "close_source_branch": true
-}
-EOF
+  if [[ -n "$EXISTING_PR" ]]; then
+    echo "A PR already exists from branch ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH} (PR #${EXISTING_PR}) in the manifests repo."
+  else
+    echo "Creating Pull Request from ${PR_HEAD_BRANCH} to ${PR_BASE_BRANCH}..."
+    PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
+    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
 
+    gh pr create --repo "$ARGO_MANIFESTS_REPO_SLUG" \
+                 --title "$PR_TITLE" \
+                 --body "$PR_BODY" \
+                 --base "$PR_BASE_BRANCH" \
+                 --head "$PR_HEAD_BRANCH"
+  fi
 fi

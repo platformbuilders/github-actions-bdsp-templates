@@ -6,8 +6,6 @@ IMAGE_TAG="$1"
 IMAGE_DIGEST="$2"
 GITHUB_TOKEN="$3"
 REPOSITORY_NAME="$4"
-BITBUCKET_TOKEN="$5"
-BITBUCKET_USERNAME="$6"
 
 echo "IMAGE_TAG: $IMAGE_TAG"
 echo "IMAGE_DIGEST: $IMAGE_DIGEST"
@@ -28,12 +26,11 @@ else
   echo "Branch não suportada: $GITHUB_REF_NAME"
   exit 1
 fi
-ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/${TARGET_REPO}"
 
 echo "TARGET_REPO: $TARGET_REPO"
 
 # Clonar o repositório de destino
-GIT_CLONE_COMMAND="git clone https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
+GIT_CLONE_COMMAND="git clone https://${GITHUB_TOKEN}@github.com/platformbuilders/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
@@ -72,43 +69,17 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   fi
 
   # Verificar se já existe um PR aberto ESPECÍFICO para dev -> master
-  EXISTING_PR=$(curl -s -G -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-                --data-urlencode 'q=state="OPEN" AND source.branch.name="'dev'" AND destination.branch.name="'master'"' \
-                "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests" \
-                | jq -r 'if .size>0 then .values[0].links.html.href else "" end')
-  
+  EXISTING_PR=$(gh pr list --base master --head dev --json number --jq '.[].number' 2>/dev/null)
 
   if [[ -n "$EXISTING_PR" ]]; then
     echo "Já existe um PR aberto (PR #$EXISTING_PR)"
   else
+    # Criar PR da dev -> master
     echo "Alterações detectadas! Criando Pull Request..."
-    BITBUCKET_REPO_API_SLUG=$(echo "$ARGO_MANIFESTS_REPO_SLUG" | cut -d'/' -f2-)
-    BITBUCKET_API_URL="https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_API_SLUG}/pullrequests"
-      
-    PR_TITLE="Deploy ${REPOSITORY_NAME} to Production"
-    PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch dev . Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
-    
-    curl -v -X POST "$BITBUCKET_API_URL" \
-      -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
-      -H "Content-Type: application/json" \
-        -d @- << EOF
-{
-  "title": "${PR_TITLE}",
-  "description": "${PR_BODY}",
-  "source": {
-    "branch": {
-      "name": "dev"
-    }
-  },
-  "destination": {
-    "branch": {
-      "name": "master"
-    }
-  },
-  "close_source_branch": true
-}
-EOF
-  echo "Pull Request criado!"
+    gh pr create --title "Update deployment with image: $IMAGE_TAG" \
+                 --body "Update deployment with image: $IMAGE_TAG" \
+                 --base master \
+                 --head dev
   fi
 
 

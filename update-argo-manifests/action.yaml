@@ -22,5 +22,3 @@ runs:
     - ${{ inputs.image-digest }}
     - ${{ inputs.github-token }}
     - ${{ inputs.repository-name }}
-    - ${{ inputs.bitbucket-token }}
-    - ${{ inputs.bitbucket-username }}
