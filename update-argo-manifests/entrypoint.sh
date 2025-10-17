@@ -33,7 +33,7 @@ ARGO_MANIFESTS_REPO_SLUG="bitbucket.org/pernamlabs/${TARGET_REPO}"
 echo "TARGET_REPO: $TARGET_REPO"
 
 # Clonar o repositório de destino
-GIT_CLONE_COMMAND="git clone https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
+GIT_CLONE_COMMAND="git clone https://x-token-auth:${BITBUCKET_TOKEN}@bitbucket.org/pernamlabs/${TARGET_REPO}.git argo-manifests"
 echo "Executing: $GIT_CLONE_COMMAND"
 $GIT_CLONE_COMMAND
 
@@ -89,7 +89,7 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
     PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch dev . Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
     
     curl -v -X POST "$BITBUCKET_API_URL" \
-      -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
+      -H "Authorization: Bearer ${BITBUCKET_TOKEN}"\
       -H "Content-Type: application/json" \
         -d @- << EOF
 {

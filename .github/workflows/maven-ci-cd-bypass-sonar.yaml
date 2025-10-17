@@ -25,6 +25,11 @@ on:
         description: 'URL do host do SonarQube'
         required: false
         type: string
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: true
+        type: string
+        
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -46,6 +51,9 @@ on:
         description: 'Token do GitHub para automação'
         required: true
 
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
+        required: true
     outputs:
       IMAGE_TAG:
         description: "Tag da imagem Docker construída"
@@ -56,6 +64,7 @@ on:
       IMAGE_URI:
         description: "URI completa da imagem Docker"
         value: ${{ jobs.CI.outputs.IMAGE_URI }}
+
 
 
 env:
@@ -189,6 +198,8 @@ jobs:
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
@@ -253,6 +264,8 @@ jobs:
           image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}

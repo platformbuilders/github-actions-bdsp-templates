@@ -382,7 +382,7 @@ jobs:
           bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-        DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
 
       - name: "Notify Slack: Success (CI/CD PRD)"
