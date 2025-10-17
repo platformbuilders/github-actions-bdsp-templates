@@ -43,7 +43,7 @@ on:
         type: string
       BITBUCKET_USERNAME:
         description: 'Username do Bitbucket'
-        required: true
+        required: false
         type: string
 
     secrets:
@@ -67,7 +67,7 @@ on:
         required: true
       BITBUCKET_TOKEN:
         description: 'Token do Bitbucket para automação'
-        required: true
+        required: false
 
     outputs:
       IMAGE_TAG:
