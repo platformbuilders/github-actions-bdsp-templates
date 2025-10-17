@@ -14,7 +14,7 @@ ARGO_MANIFESTS_REPO_DIR="argo-manifests"
 TARGET_OVERLAY_DIR=""
 TARGET_MANIFEST_BRANCH="main"
 PR_BASE_BRANCH="main"
-IS_PROD_FLOW=true
+IS_PROD_FLOW=false
 
 case "$GITHUB_REF_NAME" in
   "main"|"master")
