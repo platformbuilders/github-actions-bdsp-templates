@@ -55,7 +55,7 @@ fi
 
 # Clone manifests repo
 echo "Cloning Bitbucket repo..."
-git clone "https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
+git clone "https://x-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
 cd "${ARGO_MANIFESTS_REPO_DIR}"
 
 if [[ "$IS_PROD_FLOW" == true ]]; then
