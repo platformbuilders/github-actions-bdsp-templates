@@ -55,7 +55,7 @@ fi
 
 # Clone manifests repo
 echo "Cloning Bitbucket repo..."
-git clone "https://x-bitbucket-api-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
+git clone "https://x-token-auth:${BITBUCKET_TOKEN}@${ARGO_MANIFESTS_REPO_SLUG}.git" "${ARGO_MANIFESTS_REPO_DIR}"
 cd "${ARGO_MANIFESTS_REPO_DIR}"
 
 if [[ "$IS_PROD_FLOW" == true ]]; then
@@ -131,7 +131,7 @@ if [[ "$IS_PROD_FLOW" == true ]]; then
   PR_BODY="Automated PR for ${REPOSITORY_NAME} from source branch ${GITHUB_REF_NAME}. Update production overlay with image digest ${IMAGE_DIGEST} (tag ${IMAGE_TAG}). Ready for review and merge to deploy to production."
 
   curl -X POST "$BITBUCKET_API_URL" \
-    -u "${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}" \
+    -H "Authorization: Bearer ${BITBUCKET_TOKEN}" \
     -H "Content-Type: application/json" \
     -d @- << EOF
 {

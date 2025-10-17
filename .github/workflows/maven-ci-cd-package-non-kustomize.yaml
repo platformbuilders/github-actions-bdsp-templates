@@ -30,6 +30,10 @@ on:
         description: 'Nome de usuário do GitHub para autenticação'
         required: true
         type: string
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: true
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -50,6 +54,9 @@ on:
       AWS_SERVICE_ACCOUNT_KEY:
         description: 'Chave da service account AWS para não produção'
         required: false
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
+        required: true
 
     outputs:
       IMAGE_TAG:
@@ -260,6 +267,8 @@ jobs:
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
