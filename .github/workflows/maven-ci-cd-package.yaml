@@ -30,7 +30,10 @@ on:
         description: 'Nome de usuário do GitHub para autenticação'
         required: true
         type: string
-
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: true
+        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         description: 'Webhook URL do Slack para notificações'
@@ -50,6 +53,9 @@ on:
       AWS_SERVICE_ACCOUNT_KEY:
         description: 'Chave da service account AWS para não produção'
         required: false
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
+        required: true
 
     outputs:
       IMAGE_TAG:
@@ -115,7 +121,7 @@ jobs:
       - name: Install Trufflehog
         run: |
           curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
-            | sh -s -- -b /usr/local/bin
+            | sh -s -- -b /usr/local/bin v3.90.11
           trufflehog --version
 
       - name: Save Secret Scanner Report (JSON)
@@ -128,7 +134,16 @@ jobs:
             --only-verified \
             --json \
             > "$REPORT_JSON" 2> "$REPORT_LOG" || true
-            
+
+      - name: Upload Secret Scanner Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report
+          path: |
+            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.json
+            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.log
+          retention-days: 3
+
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v3
         with:
@@ -282,6 +297,8 @@ jobs:
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
@@ -346,6 +363,8 @@ jobs:
           image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}

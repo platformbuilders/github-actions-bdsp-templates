@@ -41,6 +41,10 @@ on:
         description: 'Diretório onde foi gerado o relatório de cobertura de testes. Ex: target/site/jacoco/jacoco.xml'
         required: false
         type: string
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: true
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -60,6 +64,9 @@ on:
         required: false
       TOKEN_GITHUB:
         description: 'Token do GitHub para automação'
+        required: true
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
         required: true
 
     outputs:
@@ -305,6 +312,8 @@ jobs:
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
@@ -369,9 +378,12 @@ jobs:
           image-digest: ${{ needs.CI_PRD.outputs.IMAGE_DIGEST }}
           github-token: ${{ secrets.TOKEN_GITHUB }}
           repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+        DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+
 
       - name: "Notify Slack: Success (CI/CD PRD)"
         if: ${{ success() }}
