@@ -15,10 +15,10 @@ inputs:
     required: true
   bitbucket-token:
     description: 'Bitbucket token'
-    required: true
+    required: false
   bitbucket-username:
     description: 'Bitbucket username'
-    required: true
+    required: false
 
 runs:
   using: 'docker'
