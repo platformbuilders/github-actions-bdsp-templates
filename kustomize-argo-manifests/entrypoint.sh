@@ -24,11 +24,11 @@ case "$GITHUB_REF_NAME" in
     ;;
   "staging"|"homolog"|release/*)
     TARGET_OVERLAY_DIR="homolog"
-    IS_PROD_FLOW=true
+    IS_PROD_FLOW=false
     ;;
   "develop")
     TARGET_OVERLAY_DIR="develop"
-    IS_PROD_FLOW=true
+    IS_PROD_FLOW=false
     ;;
   *)
     echo "No action needed for source branch '$GITHUB_REF_NAME'."
