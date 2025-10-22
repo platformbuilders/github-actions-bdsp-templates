@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kustomize Argo Manifests
-        uses: platformbuilders/github-actions-bdsp-templates/update-argo-manifests@main
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
         with:
           image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
           image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
