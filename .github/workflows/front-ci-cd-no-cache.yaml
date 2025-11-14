@@ -1,0 +1,251 @@
+name: front-ci-cd
+
+on:
+  workflow_call:
+    # Pipeline de CI/CD padrão para aplicações front.
+
+    inputs:
+      DEPLOY_PROVIDER:
+        description: 'Ambiente de deploy (GCP, AWS, etc.)'
+        required: false
+        default: 'GCP'
+        type: string
+      node_version:
+        description: 'Versão do Node a ser usada'
+        required: true
+        type: string
+      gcp_project:
+        description: 'Nome do projeto GCP'
+        required: true
+        type: string
+      git_ref:
+        description: 'A referência do Git (branch, tag, SHA) a ser buildada/deployada'
+        required: true
+        type: string
+      SONAR_BDSP_HOST_URL:
+        description: 'URL do host do SonarQube'
+        required: true
+        type: string
+      BITBUCKET_USERNAME:
+        description: 'Username do Bitbucket'
+        required: false
+        type: string
+        
+    secrets:
+      SLACK_WEBHOOK_URL:
+        description: 'Webhook URL do Slack para notificações'
+        required: true
+      SONAR_BDSP_TOKEN:
+        description: 'Token de acesso ao SonarQube'
+        required: true
+      GCP_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account GCP'
+        required: false
+      TOKEN_GITHUB:
+        description: 'Token do GitHub para automação'
+        required: true
+      AWS_SERVICE_ACCOUNT_KEY_PRD:
+        description: 'Chave da service account AWS para produção'
+        required: false
+      AWS_SERVICE_ACCOUNT_KEY:
+        description: 'Chave da service account AWS para não produção'
+        required: false
+      BITBUCKET_TOKEN:
+        description: 'Token do Bitbucket para automação'
+        required: false
+
+
+    outputs:
+      IMAGE_TAG:
+        description: "Tag da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST:
+        description: "Digest da imagem Docker construída"
+        value: ${{ jobs.CI.outputs.IMAGE_DIGEST }}
+      IMAGE_URI:
+        description: "URI completa da imagem Docker"
+        value: ${{ jobs.CI.outputs.IMAGE_URI }}
+
+
+env:
+  NODE_VERSION: ${{ inputs.node_version }}
+  DEPLOY_PROVIDER: ${{inputs.DEPLOY_PROVIDER }}
+
+jobs:
+
+  Notify_Start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Notify Slack: Start"
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "start"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+  free-space:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free space on runner
+        run: |
+          docker system prune -af --volumes
+          sudo rm -rf /usr/local/share/.cache/yarn
+          sudo rm -rf ~/.cache
+
+  CI:
+    needs: [Notify_Start, free-space]
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
+      IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
+      IMAGE_URI: ${{ steps.build_push.outputs.IMAGE_URI }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+          fetch-depth: 0
+
+      - name: Run Secret Scanner
+        uses: trufflesecurity/trufflehog@main
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: >
+            --only-verified
+            --log-level=2
+             --json
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Fetch Secret Manager secrets and create .env file
+        run: |
+          set -e
+
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+          REPO_NAME=$(basename "$GITHUB_REPOSITORY")
+
+          SECRET_SUFFIX=""
+          if [[ "$BRANCH_NAME" == "master" || "$BRANCH_NAME" == "main" ]]; then
+            SECRET_SUFFIX="-sec-prd"
+          elif [[ "$BRANCH_NAME" == "develop" ]]; then
+            SECRET_SUFFIX="-sec-dev"
+          else
+            SECRET_SUFFIX="-sec-hml"
+          fi
+
+          SECRET_NAME="${REPO_NAME}${SECRET_SUFFIX}"
+          ENV_FILE=".env"
+          GCP_SECRET_PROJECT="${{ inputs.gcp_project }}"
+
+          echo "Fetching and creating $ENV_FILE..."
+
+          gcloud secrets versions access latest --secret="$SECRET_NAME" --project="$GCP_SECRET_PROJECT" \
+          | jq -r 'to_entries[] | "\(.key)=\(.value)"' > "$ENV_FILE"
+
+          if [ -s "$ENV_FILE" ]; then
+              echo "$ENV_FILE created successfully."
+
+              echo "Displaying .env content with masked values"
+              while IFS='=' read -r key val || [[ -n "$key" ]]; do
+                  if [[ -z "$key" ]] || [[ "$key" == \#* ]]; then 
+                    continue
+                  fi
+            
+                  if [ ${#val} -gt 7 ]; then 
+                      first_chars="${val:0:3}"  
+                      last_chars="${val: -3}" 
+                      echo "${key}=${first_chars}...${last_chars}"
+                  else
+                    echo "${key}=${val}"
+                  fi
+              done < "$ENV_FILE"
+
+          else
+              echo "Error: Failed to create $ENV_FILE or it is empty."
+              exit 1
+          fi
+
+          echo "Secret fetching and .env creation finished."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests and collect coverage
+        run: yarn test
+
+      - name: Build Application Artifact
+        run: yarn build
+          
+      - name: Build and Push Docker image to GCR
+        id: build_push
+        uses: platformbuilders/github-actions-bdsp-templates/build-push-image@main
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          PROJECT_TYPE: frontend 
+          AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
+          AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+
+      - name: Run Image Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
+          format: 'table'
+          output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+          exit-code: '0'
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Image Vulnerability Scanner Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
+          path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+          retention-days: 3
+
+  
+      - name: "Notify Slack: Failure (CI)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  CD:
+    needs: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kustomize Argo Manifests
+        uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
+        with:
+          image-tag: ${{ needs.CI.outputs.IMAGE_TAG }}
+          image-digest: ${{ needs.CI.outputs.IMAGE_DIGEST }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          repository-name: ${{ github.repository }}
+          bitbucket-token: ${{ secrets.BITBUCKET_TOKEN }}
+          bitbucket-username: ${{ vars.BITBUCKET_USERNAME }}
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+     
+      - name: "Notify Slack: Success (CD)"
+        if: ${{ success() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "success"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+     
+      - name: "Notify Slack: Failure (CD)"
+        if: ${{ failure() }}
+        uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
+        with:
+          type: "failure"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
