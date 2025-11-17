@@ -1,14 +1,16 @@
 #!/bin/bash
-
 set -e
+
+echo "Limpando espaço dentro do container..."
+
+docker system prune -af --volumes || true
+rm -rf /tmp/* || true
+rm -rf /var/lib/apt/lists/* || true
+rm -rf ~/.cache || true
 
 chmod 777 -R /tmp/
 
-echo "[CLEAN] Limpando espaço antes do build..."
-docker system prune -af --volumes || true
-rm -rf /var/lib/apt/lists/* || true
-rm -rf ~/.cache || true
-rm -rf /tmp/* || true
+echo "Limpeza finalizada!"
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 # Adicionar o diretório workspace à lista de diretórios seguros
