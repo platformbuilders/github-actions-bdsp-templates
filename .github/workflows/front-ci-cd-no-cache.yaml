@@ -97,9 +97,6 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /usr/local/share/boost
-          
-          docker system prune -a --force --volumes
-          
           sudo rm -rf /usr/local/share/.cache/yarn
           rm -rf ~/.cache
     
