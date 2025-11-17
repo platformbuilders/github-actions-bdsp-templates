@@ -1,0 +1,104 @@
+name: 'Build and Push Docker Image'
+description: 'Builds and pushes a Docker image to Registry based on the branch.'
+
+inputs:
+  github_token:
+    description: 'GitHub Token para acessar registry privado'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  IMAGE_TAG:
+    description: 'Tag da imagem Docker.'
+    value: ${{ steps.build.outputs.image_tag }}
+  IMAGE_DIGEST:
+    description: 'Digest da imagem Docker.'
+    value: ${{ steps.build.outputs.image_digest }}
+  IMAGE_URI:
+    description: 'URI da imagem Docker.'
+    value: ${{ steps.build.outputs.IMAGE_URI }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github_token }}
+    
+    - name: Pull base image
+      shell: bash
+      run: |
+        docker pull ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
+    
+    - name: Run build and push
+      id: build
+      shell: bash
+      run: |
+        mkdir -p /tmp/outputs
+        TEMP_DIR=/tmp/outputs
+        chmod 777 -R "$TEMP_DIR"
+        
+        echo "Diretório temporário criado: $TEMP_DIR"
+        
+        docker run --rm \
+          -v ${{ github.workspace }}:/github/workspace \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v "$TEMP_DIR":/tmp \
+          -e GITHUB_TOKEN="${{ inputs.github_token }}" \
+          -e GITHUB_ACTOR="${{ github.actor }}" \
+          -e GITHUB_REPOSITORY \
+          -e GITHUB_SHA \
+          -e GITHUB_REF \
+          -e GITHUB_REF_NAME \
+          -e GITHUB_HEAD_REF \
+          -e GITHUB_BASE_REF \
+          -e GITHUB_EVENT_NAME \
+          -e GITHUB_WORKSPACE="/github/workspace" \
+          -e SHORT_SHA \
+          -e GCP_SERVICE_ACCOUNT_KEY \
+          -e AWS_SERVICE_ACCOUNT_KEY \
+          -e AWS_SERVICE_ACCOUNT_KEY_PRD \
+          -e AWS_ACCESS_KEY_ID \
+          -e AWS_SECRET_ACCESS_KEY \
+          -e AWS_ACCESS_KEY_ID_PRD \
+          -e AWS_SECRET_ACCESS_KEY_PRD \
+          -e AWS_REGION \
+          -e AWS_REGION_PRD \
+          -e PROJECT_TYPE \
+          -e DEPLOY_PROVIDER \
+          -w /github/workspace \
+          ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
+        
+        echo "Container executado. Verificando arquivos de output..."
+        ls -la "$TEMP_DIR/"
+        
+        # Capturar outputs dos arquivos individuais
+        if [ -f "$TEMP_DIR/image_tag.txt" ]; then
+          IMAGE_TAG=$(cat "$TEMP_DIR/image_tag.txt")
+          echo "IMAGE_TAG encontrado: $IMAGE_TAG"
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_tag.txt não encontrado"
+        fi
+        
+        if [ -f "$TEMP_DIR/image_digest.txt" ]; then
+          IMAGE_DIGEST=$(cat "$TEMP_DIR/image_digest.txt")
+          echo "IMAGE_DIGEST encontrado: $IMAGE_DIGEST"
+          echo "image_digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_digest.txt não encontrado"
+        fi
+        
+        if [ -f "$TEMP_DIR/image_uri.txt" ]; then
+          IMAGE_URI=$(cat "$TEMP_DIR/image_uri.txt")
+          echo "IMAGE_URI encontrado: $IMAGE_URI"
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+        else
+          echo "Arquivo image_uri.txt não encontrado"
+        fi
+        
+        # Limpar diretório temporário
+        rm -rf "$TEMP_DIR"
