@@ -183,6 +183,22 @@ jobs:
 
       - name: Build Application Artifact
         run: yarn build
+
+      - name: Limpar Cache de Linguagens
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/share/boost
+          
+          # Limpar caches de Node.js (yarn/npm) e Rust
+          rm -rf ~/.npm
+          rm -rf ~/.cache
+          rm -rf ~/.local/share/pnpm/store
+          rm -rf ~/.yarn/cache
+
+      - name: Limpar Imagens e Volumes Antigos do Docker
+        run: |
+          docker system prune -a --force --volumes
           
       - name: Build and Push Docker image to GCR
         id: build_push
