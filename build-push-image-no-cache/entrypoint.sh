@@ -1,15 +1,29 @@
 #!/bin/bash
 set -e
 
-echo "Limpando espaço dentro do container..."
+echo "Limpando espaço antes do build..."
 
+# Limpa imagens, layers e volumes mortos do Docker
 docker system prune -af --volumes || true
+
+# Limpa temporários
 rm -rf /tmp/* || true
+
+# Limpa caches do apt
 rm -rf /var/lib/apt/lists/* || true
+
+# Limpa caches do usuário root
 rm -rf ~/.cache || true
 
+# Limpa caches gerais
+rm -rf /usr/local/share/.cache || true
+rm -rf /root/.cache/yarn || true
+rm -rf /usr/local/share/.cache/yarn || true
+
+# Permissão para pasta temporária
 chmod 777 -R /tmp/
 
+echo "Espaço liberado!"
 echo "Limpeza finalizada!"
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
