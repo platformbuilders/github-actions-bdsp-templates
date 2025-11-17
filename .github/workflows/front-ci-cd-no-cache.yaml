@@ -81,17 +81,9 @@ jobs:
         with:
           type: "start"
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-  free-space:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Free space on runner
-        run: |
-          docker system prune -af --volumes
-          sudo rm -rf /usr/local/share/.cache/yarn
-          sudo rm -rf ~/.cache
 
   CI:
-    needs: [Notify_Start, free-space]
+    needs: [Notify_Start]
     runs-on: ubuntu-latest
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
@@ -99,6 +91,18 @@ jobs:
       IMAGE_URI: ${{ steps.build_push.outputs.IMAGE_URI }}
       
     steps:
+
+      - name: Free Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/share/boost
+          
+          docker system prune -a --force --volumes
+          
+          sudo rm -rf /usr/local/share/.cache/yarn
+          rm -rf ~/.cache
+    
       - name: Checkout code
         uses: actions/checkout@v4
         with:
