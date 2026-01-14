@@ -170,6 +170,11 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
       if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
         IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
         IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | awk '{print $3}')
+    
+      if [[ ! "$IMAGE_TAG" =~ ^[a-f0-9]{7}$ ]]; then
+        echo "Tag inválida detectada ($IMAGE_TAG). Usando SHORT_SHA."
+        IMAGE_TAG="$SHORT_SHA"
+      fi
 
       elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
         IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | jq -r '.imageDigest')
