@@ -26,7 +26,7 @@ runs:
             json_file="${GITHUB_ACTION_PATH}/start.json"
             ;;
           success )
-            if [ "${{inputs.stack_invoke}}" == "mobile"]; then
+            if [ "${{ inputs.stack_invoke }}" == "mobile" ]; then
               json_file="${GITHUB_ACTION_PATH}/success-mobile.json"
             else
               json_file="${GITHUB_ACTION_PATH}/success.json"
@@ -51,7 +51,7 @@ runs:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_COMMIT_HASH: ${{ github.sha }}
-        ADDITIONAL_INFO: ${{inputs.pipeline_info}}
+        ADDITIONAL_INFO: ${{ inputs.pipeline_info }}
       run: |
         if [ ! -f "$JSON_FILE" ]; then
           echo "Error: JSON file not found at $JSON_FILE"
