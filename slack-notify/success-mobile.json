@@ -28,7 +28,7 @@
             },
             {
               "type": "mrkdwn",
-              "text": "*URL Firebase:*\n<${FIREBASE_URL}|Abrir aplicação>"
+              "text": "*URL Firebase:*\n<${ADDITIONAL_INFO}|Abrir aplicação>"
             }
           ]
         },
