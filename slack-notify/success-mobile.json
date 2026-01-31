@@ -1,0 +1,51 @@
+{
+  "attachments": [
+    {
+      "color": "#36a64f",
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Execução Concluída com Sucesso!  ✅"
+          },
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Repositório:*\n${REPO_NAME}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Branch:*\n${BRANCH_NAME}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Autor:*\n${GITHUB_ACTOR}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Commit:*\n${COMMIT_SHORT_HASH}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*URL Firebase:*\n<${FIREBASE_URL}|Abrir aplicação>"
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Ver Detalhes"
+              },
+              "url": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
