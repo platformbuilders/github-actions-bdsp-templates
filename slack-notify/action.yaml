@@ -7,6 +7,13 @@ inputs:
   webhook_url:
     description: "The Slack webhook URL to send the notification."
     required: true
+  stack_invoke:
+    description: "Used to define which file is used in notify"
+    required: false
+    default: "none"
+  pipeline_info: 
+    default: ""
+    required: false
 
 runs:
   using: "composite"
@@ -18,8 +25,12 @@ runs:
           start)
             json_file="${GITHUB_ACTION_PATH}/start.json"
             ;;
-          success)
-            json_file="${GITHUB_ACTION_PATH}/success.json"
+          success )
+            if [ "${{inputs.stack_invoke}}" == "mobile"]; then
+              json_file="${GITHUB_ACTION_PATH}/success-mobile.json"
+            else
+              json_file="${GITHUB_ACTION_PATH}/success.json"
+            fi
             ;;
           failure)
             json_file="${GITHUB_ACTION_PATH}/failure.json"
@@ -40,6 +51,7 @@ runs:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_COMMIT_HASH: ${{ github.sha }}
+        ADDITIONAL_INFO: ${{inputs.pipeline_info}}
       run: |
         if [ ! -f "$JSON_FILE" ]; then
           echo "Error: JSON file not found at $JSON_FILE"
@@ -49,12 +61,13 @@ runs:
         REPO_NAME=$(basename ${{ github.repository }})
         BRANCH_NAME=$(basename ${{ github.ref }})
         COMMIT_SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
-
+        
         export REPO_NAME
         export BRANCH_NAME
         export GITHUB_ACTOR
         export GITHUB_RUN_ID
         export COMMIT_SHORT_HASH
+        export ADDITIONAL_INFO
 
         envsubst < "$JSON_FILE" > "temp.json"
   
