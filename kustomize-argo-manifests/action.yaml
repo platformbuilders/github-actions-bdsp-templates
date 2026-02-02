@@ -15,7 +15,7 @@ inputs:
     required: true
   bitbucket-token:
     description: 'Bitbucket token'
-    required: false
+    required: true
   bitbucket-username:
     description: 'Bitbucket username'
     required: false
