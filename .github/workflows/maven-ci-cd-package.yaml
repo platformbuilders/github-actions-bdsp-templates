@@ -152,7 +152,7 @@ jobs:
 
       - name: Build and Test with Maven
         env:
-          GITHUB_USERNAME: ${{ vars.USER_GITHUB }}
+          GITHUB_USERNAME: ${{ inputs.USER_GITHUB }}
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         run: |
           mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib -B -s ./settings.xml
