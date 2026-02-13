@@ -161,6 +161,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '${{ env.JAVA_VERSION }}'
+      
+      - name: Verificar versão do Docker
+        run: |
+          echo "=== Verificando Docker ==="
+          docker --version
+          docker info
 
       - name: Build and Test with Maven
         run: |
