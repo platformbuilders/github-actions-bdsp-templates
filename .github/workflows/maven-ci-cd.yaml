@@ -211,12 +211,10 @@ jobs:
           distribution: 'temurin'
           java-version: '${{ env.JAVA_VERSION }}'
    
-      - name: "Docker-debug"
+      - name: "workaround-debug"
         run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
+           echo api.version=1.44 >> ~/.docker-java.properties
+
       
       - name: Build and Test with Maven
         run: |
