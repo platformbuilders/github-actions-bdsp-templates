@@ -121,26 +121,13 @@ jobs:
       IMAGE_URI: ${{ steps.build_push.outputs.IMAGE_URI }}
       
     steps:
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
-          
+      
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
-          
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
-          
+                   
       - name: Run Secret Scanner
         uses: trufflesecurity/trufflehog@main
         with:
@@ -151,25 +138,11 @@ jobs:
             --log-level=2
              --json
 
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
-          
       - name: Install Trufflehog
         run: |
           curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
             | sh -s -- -b /usr/local/bin v3.90.11
           trufflehog --version
-
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
 
       - name: Save Secret Scanner Report (JSON)
         run: |
@@ -181,13 +154,6 @@ jobs:
             --only-verified \
             --json \
             > "$REPORT_JSON" 2> "$REPORT_LOG" || true
-      
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
           
       - name: Upload Secret Scanner Report
         uses: actions/upload-artifact@v4
@@ -198,23 +164,15 @@ jobs:
             ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.log
           retention-days: 3
     
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
-          
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '${{ env.JAVA_VERSION }}'
    
-      - name: "workaround-debug"
+      - name: "workaround-fix-testcontaineroutdate"
         run: |
            echo api.version=1.44 >> ~/.docker-java.properties
-
       
       - name: Build and Test with Maven
         run: |
