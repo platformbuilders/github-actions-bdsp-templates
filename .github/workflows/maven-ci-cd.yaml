@@ -97,13 +97,6 @@ jobs:
   Notify_Start:
     runs-on: ubuntu-latest
     steps:
-    
-      - name: "Docker-debug"
-        run: |
-          which docker || true
-          docker --version || true
-          docker version || true
-          docker info || true
          
       - name: "Notify Slack: Start"
         uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
