@@ -111,6 +111,28 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   aws ecr get-login-password --region "$AWS_REGION_PRD" --profile prd | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
+
+if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
+  echo "Verificando se o repositório '$REPOSITORY_NAME' existe no Artifact Registry..."
+
+  if ! gcloud artifacts repositories describe "$REPOSITORY_NAME" \
+    --location=us \
+    --project=image-registry-326015 >/dev/null 2>&1; then
+
+    echo "Repositório não encontrado. Criando '$REPOSITORY_NAME'..."
+
+    gcloud artifacts repositories create "$REPOSITORY_NAME" \
+      --repository-format=docker \
+      --location=us \
+      --project=image-registry-326015 \
+      --description="Repositório criado automaticamente pelo pipeline do GitHub Actions"
+
+    echo "Repositório '$REPOSITORY_NAME' criado com sucesso."
+  else
+    echo "Repositório '$REPOSITORY_NAME' já existe."
+  fi
+fi
+
 # Verificar se a branch é master ou main
 if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
