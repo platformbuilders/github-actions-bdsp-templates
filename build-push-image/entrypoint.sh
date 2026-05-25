@@ -1,7 +1,23 @@
 #!/bin/bash
-
 set -e
 
+echo "Limpando espaço antes do build..."
+
+# Limpa temporários
+rm -rf /tmp/* || true
+
+# Limpa caches do apt
+rm -rf /var/lib/apt/lists/* || true
+
+# Limpa caches do usuário root
+rm -rf ~/.cache || true
+
+# Limpa caches gerais
+rm -rf /usr/local/share/.cache || true
+rm -rf /root/.cache/yarn || true
+rm -rf /usr/local/share/.cache/yarn || true
+
+# Permissão para pasta temporária
 chmod 777 -R /tmp/
 
 echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
@@ -111,28 +127,6 @@ elif [ $DEPLOY_PROVIDER == "AWS" ]; then
   aws ecr get-login-password --region "$AWS_REGION_PRD" --profile prd | docker login --username AWS --password-stdin "$REPOSITORY_URI_BRANCH_PRD"
 fi
 
-
-if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
-  echo "Verificando se o repositório '$REPOSITORY_NAME' existe no Artifact Registry..."
-
-  if ! gcloud artifacts repositories describe "$REPOSITORY_NAME" \
-    --location=us \
-    --project=image-registry-326015 >/dev/null 2>&1; then
-
-    echo "Repositório não encontrado. Criando '$REPOSITORY_NAME'..."
-
-    gcloud artifacts repositories create "$REPOSITORY_NAME" \
-      --repository-format=docker \
-      --location=us \
-      --project=image-registry-326015 \
-      --description="Repositório criado automaticamente pelo pipeline do GitHub Actions"
-
-    echo "Repositório '$REPOSITORY_NAME' criado com sucesso."
-  else
-    echo "Repositório '$REPOSITORY_NAME' já existe."
-  fi
-fi
-
 # Verificar se a branch é master ou main
 if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
 
@@ -165,14 +159,15 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
   else
       
       if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
-        LATEST_IMAGE_LINE=$(gcloud artifacts docker images list --include-tags "$REPOSITORY_URI_PRD" \
-            --sort-by=~UPDATE_TIME \
-            --limit=1 \
+        echo "Buscando imagem de produção pelo commit atual (SHORT_SHA=$SHORT_SHA)..."
+        GCP_IMAGE_VERSION=$(gcloud artifacts docker tags list "$REPOSITORY_URI_PRD" \
+            --filter="tag='$SHORT_SHA'" \
+            --format="value(version)" \
             --quiet \
-            | tail -n 1)
+            | head -n 1)
 
-        if [[ -z "$LATEST_IMAGE_LINE" ]]; then
-            echo "Erro Crítico: Nenhuma linha de dados retornada por gcloud."
+        if [[ -z "$GCP_IMAGE_VERSION" ]]; then
+            echo "Erro Crítico: Nenhuma imagem encontrada no Artifact Registry para a tag '$SHORT_SHA' em '$REPOSITORY_URI_PRD'."
             exit 1
         fi
       elif  [ "$DEPLOY_PROVIDER" == "AWS" ]; then
@@ -190,13 +185,8 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
       fi
 
       if [ "$DEPLOY_PROVIDER" == "GCP" ]; then
-        IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | awk '{print $2}')
-        IMAGE_TAG=$(echo "$LATEST_IMAGE_LINE" | awk '{print $3}')
-    
-      if [[ ! "$IMAGE_TAG" =~ ^[a-f0-9]{7}$ ]]; then
-        echo "Tag inválida detectada ($IMAGE_TAG). Usando SHORT_SHA."
+        IMAGE_DIGEST="${GCP_IMAGE_VERSION##*@}"
         IMAGE_TAG="$SHORT_SHA"
-      fi
 
       elif [ "$DEPLOY_PROVIDER" == "AWS" ]; then
         IMAGE_DIGEST=$(echo "$LATEST_IMAGE_LINE" | jq -r '.imageDigest')
@@ -332,4 +322,3 @@ fi
 
   echo "Script de build e push concluído com sucesso."
   echo "$IMAGE_TAG" > /tmp/image_tag.txt
-
