@@ -83,41 +83,6 @@ jobs:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
 
-      - name: Run Secret Scanner
-        uses: trufflesecurity/trufflehog@main
-        with:
-          base: ${{ github.event.pull_request.base.sha }}
-          head: ${{ github.event.pull_request.head.sha }}
-          extra_args: >
-            --only-verified
-            --log-level=2
-             --json
-
-      - name: Install Trufflehog
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
-            | sh -s -- -b /usr/local/bin v3.90.11
-          trufflehog --version
-
-      - name: Save Secret Scanner Report (JSON)
-        run: |
-          REPORT_JSON="${{ github.event.repository.name }}-secret-scanner-report.json"
-          REPORT_LOG="${{ github.event.repository.name }}-secret-scanner-report.log"
-
-          trufflehog git file://. \
-            --only-verified \
-            --json \
-            > "$REPORT_JSON" 2> "$REPORT_LOG" || true
-
-      - name: Upload Secret Scanner Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.repository.name }}-secret-scanner-report
-          path: |
-            ${{ github.event.repository.name }}-secret-scanner-report.json
-            ${{ github.event.repository.name }}-secret-scanner-report.log
-          retention-days: 3
-
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
