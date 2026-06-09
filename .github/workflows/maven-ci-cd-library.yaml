@@ -186,7 +186,7 @@ jobs:
 
       # --- ESTÁGIO DE CD: Publicação do Artefato (Apenas se for branch produtiva/tag) ---
       - name: Publish Package to GitHub Packages
-        if: ${{ inputs.is_production_branch && success() }}
+        if: ${{ success() }}
         run: |
           mvn --settings ${{ github.workspace }}/settings.xml deploy -DskipTests
         env:
