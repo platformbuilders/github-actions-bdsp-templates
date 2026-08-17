@@ -234,9 +234,12 @@ jobs:
       # alimenta o log de verificacao do build-push-image, sem alterar a promocao.
       - name: Resolve tag da release mergeada
         id: promote_tag
+        env:
+          # Repassado por env, e nao interpolado no corpo do script, para nao
+          # expor o contexto do evento a injecao de codigo (CodeQL js/actions/*).
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -e
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
 
           if [[ -n "$HEAD_SHA" ]]; then
             TAG="${HEAD_SHA:0:7}"
