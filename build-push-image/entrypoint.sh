@@ -209,6 +209,23 @@ if [[ "$GITHUB_REF_NAME" == "master" || "$GITHUB_REF_NAME" == "main" ]]; then
          echo "Linha processada: '$LATEST_IMAGE_LINE'"
          exit 1
       fi
+
+      # Fase de observação: compara a imagem promovida (mais recente por data) com a
+      # imagem da release que foi efetivamente mergeada. Não altera a promoção.
+      if [[ -n "${PROMOTE_IMAGE_TAG:-}" ]]; then
+        echo "=== VERIFICACAO DE PROMOCAO (observacao) ==="
+        echo "Tag promovida (mais recente por data): $IMAGE_TAG"
+        echo "Tag esperada (release mergeada):       $PROMOTE_IMAGE_TAG"
+        if [[ "$IMAGE_TAG" == "$PROMOTE_IMAGE_TAG" ]]; then
+          echo "RESULTADO: OK - coincidem"
+        else
+          echo "RESULTADO: DIVERGENCIA - a imagem promovida NAO e a da release mergeada"
+        fi
+        echo "============================================"
+      else
+        echo "VERIFICACAO DE PROMOCAO: PROMOTE_IMAGE_TAG nao informada; nada a comparar."
+      fi
+
         echo "$IMAGE_TAG" > /tmp/image_tag.txt
         echo "$IMAGE_DIGEST" > /tmp/image_digest.txt  
         echo "Outputs definidos."
