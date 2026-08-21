@@ -69,6 +69,7 @@ runs:
           -e AWS_REGION_PRD \
           -e PROJECT_TYPE \
           -e DEPLOY_PROVIDER \
+          -e PROMOTE_IMAGE_TAG \
           -w /github/workspace \
           ghcr.io/platformbuilders/github-actions-bdsp-templates/build-push-image:latest
         

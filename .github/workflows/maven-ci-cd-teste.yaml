@@ -203,6 +203,33 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.git_ref }}
+          fetch-depth: 0
+
+      # Resolve a imagem a promover a partir da release que foi mergeada, e nao
+      # da imagem mais recente do registry. Fase de observacao: o valor apenas
+      # alimenta o log de verificacao do build-push-image, sem alterar a promocao.
+      - name: Resolve tag da release mergeada
+        id: promote_tag
+        env:
+          # Repassado por env, e nao interpolado no corpo do script, para nao
+          # expor o contexto do evento a injecao de codigo (CodeQL js/actions/*).
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -e
+
+          if [[ -n "$HEAD_SHA" ]]; then
+            TAG="${HEAD_SHA:0:7}"
+            echo "Origem: pull_request.head.sha ($HEAD_SHA)"
+          elif [[ "$(git rev-list --parents -n 1 HEAD 2>/dev/null | wc -w)" -ge 3 ]]; then
+            TAG=$(git rev-parse --short=7 "HEAD^2")
+            echo "Origem: segundo pai do merge commit"
+          else
+            TAG=""
+            echo "AVISO: sem contexto de PR e sem merge commit; nao foi possivel determinar a release mergeada."
+          fi
+
+          echo "Tag esperada para promocao: ${TAG:-<indefinida>}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Get image to GCR
         id: get_image
@@ -212,6 +239,7 @@ jobs:
           AWS_SERVICE_ACCOUNT_KEY: ${{secrets.AWS_SERVICE_ACCOUNT_KEY}} 
           AWS_SERVICE_ACCOUNT_KEY_PRD: ${{ secrets.AWS_SERVICE_ACCOUNT_KEY_PRD }}
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
+          PROMOTE_IMAGE_TAG: ${{ steps.promote_tag.outputs.tag }}
 
       - name: "Notify Slack: Failure (CI_PRD)"
         if: ${{ failure() }}
