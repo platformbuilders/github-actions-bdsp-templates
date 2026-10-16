@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     docker.io \
+    docker-buildx \
     jq \
     && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
     && echo "deb https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list \

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     docker.io \
+    docker-buildx \
     jq \
     unzip \
     && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
