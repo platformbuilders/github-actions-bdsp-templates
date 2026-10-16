@@ -149,7 +149,7 @@ jobs:
             > "$REPORT_JSON" 2> "$REPORT_LOG" || true
           
       - name: Upload Secret Scanner Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report
           path: |
@@ -291,7 +291,7 @@ jobs:
           severity: "CRITICAL,HIGH"
 
       - name: Upload Image Vulnerability Scanner Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
           path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
