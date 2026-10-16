@@ -19,3 +19,5 @@ Este repositório contém GitHub Actions customizadas para automação de CI/CD 
 📌 [Fixação de actions por SHA e passo a passo de atualização](readmes/README-PINNING-ACTIONS.md)
 
 🛡️ [Scan de vulnerabilidades da imagem (Trivy): gate, exceções e avisos no Slack](readmes/README-TRIVY.md)
+
+🔔 [Resumo dos scanners no Slack (vulnerabilidades e credenciais expostas)](readmes/README-SCAN-REPORT-NOTIFY.md)

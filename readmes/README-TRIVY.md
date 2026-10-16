@@ -12,10 +12,13 @@ Depois do build e push da imagem, estes steps rodam em sequência:
 
 | Step | O que faz | Bloqueia? |
 |---|---|---|
-| **Run Image Vulnerability Scanner** | relatório em tabela com tudo que é `CRITICAL` e `HIGH`, publicado como artifact | não |
+| **Run Image Vulnerability Scanner** | escaneia tudo que é `CRITICAL` e `HIGH` e gera `trivy-report.json` | não |
+| **Convert Image Vulnerability Report to table** | converte esse JSON na tabela legível, sem escanear a imagem de novo | — |
+| **Upload Image Vulnerability Scanner Report** | publica a tabela e o JSON como artifact `<repo>-<tag>-image-scanner-report` | — |
 | **Image Vulnerability Gate (CRITICAL)** | procura vulnerabilidades `CRITICAL` **que já têm correção** (`ignore-unfixed`) | só em modo bloqueio |
-| **Image Vulnerability Gate Summary** | escreve no resumo do run a tabela de CVEs (pacote, versão instalada e versão corrigida) e, se houver achados, envia um aviso no Slack | — |
+| **Image Vulnerability Gate Summary** | escreve no resumo do run a tabela de CVEs (pacote, versão instalada e versão corrigida) | — |
 | **Upload Image Vulnerability Gate Report** | publica o JSON do gate como artifact `<repo>-<tag>-image-vulnerability-gate`, com **90 dias** de retenção | — |
+| **Notify Slack: Image Vulnerability Report** | envia o resumo do relatório para o Slack, se houver achados (ver [Aviso no Slack](#-aviso-no-slack)) | — |
 
 O gate considera apenas o que é **CRITICAL e tem versão corrigida disponível**. CVEs sem correção não bloqueiam, porque o time não teria como resolver. Elas continuam aparecendo no relatório em tabela.
 
@@ -82,12 +85,18 @@ CVE-2025-67890 exp:2026-11-30
 
 ## 🔔 Aviso no Slack
 
-Quando o gate encontra CVEs (nos dois modos), o step de resumo envia uma mensagem para o mesmo webhook das outras notificações da pipeline (`SLACK_WEBHOOK_URL`). A mensagem traz:
+A cada execução, a action [`scan-report-notify`](../scan-report-notify/action.yaml) envia um resumo do relatório `CRITICAL,HIGH` para o mesmo webhook das outras notificações da pipeline (`SLACK_WEBHOOK_URL`). A mensagem é enviada **sempre**, inclusive sem achados, para que fique claro que a imagem foi verificada. Detalhes em [README-SCAN-REPORT-NOTIFY](README-SCAN-REPORT-NOTIFY.md).
+
+Quando há achados, a mensagem traz:
+
 - repositório, branch e tag da imagem;
-- até 10 CVEs no formato `CVE` · pacote · versão instalada → versão corrigida (o restante fica no resumo do run);
+- a contagem de críticas e altas e quantas já têm correção;
+- **onde corrigir:** imagem base (pacotes do sistema, resolvidos no `Dockerfile`) × dependências da aplicação (`pom.xml`/`package.json`);
+- até 8 CVEs com correção, críticas primeiro, no formato `CVE` · pacote · versão instalada → versão corrigida;
+- se houver crítica com correção: o aviso do gate ("com o bloqueio ativo, esta pipeline falharia" ou "pipeline bloqueada");
 - um botão para abrir o run.
 
-Se o envio falhar, o job **não** falha; aparece apenas um *warning* "Falha ao enviar o aviso para o Slack".
+A cor é **vermelha** quando há crítica com correção, **laranja** quando há só altas ou críticas sem correção, e **verde** quando nada foi encontrado. Se o scan não terminar, a mensagem avisa que a varredura não foi concluída, em vez de afirmar que está tudo limpo. Se o envio falhar, o job **não** falha; aparece apenas um *warning* no log.
 
 ## 🗂️ Histórico e relatórios
 
@@ -97,8 +106,8 @@ O repositório não usa a aba *Security → Code scanning* do GitHub, porque em 
 |---|---|---|
 | Resumo do run (aba *Summary*) | tabela de CVEs do gate | a mesma dos logs de Actions |
 | Artifact `*-image-vulnerability-gate` | JSON completo do gate (CVEs CRITICAL com correção) | 90 dias |
-| Artifact `*-image-scanner-report` | relatório em tabela `CRITICAL,HIGH` | 3 ou 7 dias, conforme o template |
-| Slack | aviso por build com achados | a do canal |
+| Artifact `*-image-scanner-report` | relatório `CRITICAL,HIGH` em tabela e em JSON | 3 ou 7 dias, conforme o template |
+| Slack | resumo de cada build | a do canal |
 
 > Para uma visão consolidada de todos os serviços, com histórico e monitoramento contínuo do que está em produção, a próxima etapa avaliada é uma ferramenta self-hosted como o **OWASP Dependency-Track** (alimentado pelo SBOM gerado pelo Trivy) ou o **DefectDojo**.
 

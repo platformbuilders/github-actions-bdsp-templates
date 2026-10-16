@@ -151,24 +151,42 @@ jobs:
           trufflehog --version
 
       - name: Save Secret Scanner Report (JSON)
+        id: secret_report
         run: |
-          REPORT_JSON="${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.json"
-          REPORT_LOG="${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.log"
+          REPORT_JSON="${{ github.event.repository.name }}-secret-scanner-report.json"
+          REPORT_LOG="${{ github.event.repository.name }}-secret-scanner-report.log"
 
           # Roda o scan: JSON em stdout -> arquivo; logs/avisos em stderr -> .log
-          trufflehog git file://. \
+          # Não bloqueia a pipeline: só registra se a varredura terminou, para o resumo no Slack
+          # não afirmar "nada encontrado" quando o scan falhou.
+          if trufflehog git file://. \
             --only-verified \
             --json \
-            > "$REPORT_JSON" 2> "$REPORT_LOG" || true
+            > "$REPORT_JSON" 2> "$REPORT_LOG"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=Secret scanner::A varredura do histórico não foi concluída; veja o .log no artifact."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
           
       - name: Upload Secret Scanner Report
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report
+          name: ${{ github.event.repository.name }}-secret-scanner-report
           path: |
-            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.json
-            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-secret-scanner-report.log
+            ${{ github.event.repository.name }}-secret-scanner-report.json
+            ${{ github.event.repository.name }}-secret-scanner-report.log
           retention-days: 3
+
+      # Resumo no Slack das credenciais VÁLIDAS encontradas no histórico. Envia sempre, inclusive sem achados.
+      # Nunca envia o valor da credencial.
+      - name: "Notify Slack: Secret Scanner Report"
+        uses: platformbuilders/github-actions-bdsp-templates/scan-report-notify@main
+        with:
+          type: secrets
+          report: ${{ github.event.repository.name }}-secret-scanner-report.json
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          scan_ok: ${{ steps.secret_report.outputs.ok == 'true' }}
     
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
@@ -300,20 +318,29 @@ jobs:
 
        
       - name: Run Image Vulnerability Scanner
+        id: trivy_scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: "v0.76.0"
           image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
-          format: 'table'
-          output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+          format: 'json'
+          output: 'trivy-report.json'
           exit-code: '0'
           severity: "CRITICAL,HIGH"
+
+      # Tabela legível para o artifact, gerada a partir do mesmo JSON (sem escanear a imagem de novo).
+      - name: Convert Image Vulnerability Report to table
+        env:
+          REPORT_TXT: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
+        run: trivy convert --format table --output "$REPORT_TXT" trivy-report.json
 
       - name: Upload Image Vulnerability Scanner Report
         uses: actions/upload-artifact@v7
         with:
           name: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report
-          path: ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+          path: |
+            ${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt
+            trivy-report.json
           retention-days: 7
 
       # Gate de vulnerabilidades: CRITICAL com correção disponível (ignore-unfixed).
@@ -338,9 +365,6 @@ jobs:
         env:
           GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}
           BLOCK_MODE: ${{ inputs.trivy_block_critical || vars.TRIVY_BLOCK_CRITICAL == 'true' }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           REPORT="trivy-gate.json"
           if [ ! -s "$REPORT" ]; then
@@ -380,48 +404,6 @@ jobs:
             echo "::warning title=Trivy gate (modo aviso)::$COUNT vulnerabilidade(s) CRITICAL com correção disponível. Com o bloqueio ativo, esta pipeline falharia."
           fi
 
-          # Aviso no Slack. O payload é montado com jq para escapar corretamente os títulos das CVEs.
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "SLACK_WEBHOOK_URL não definido; aviso no Slack não enviado."
-            exit 0
-          fi
-          jq -n \
-            --slurpfile report "$REPORT" \
-            --arg repo "${GITHUB_REPOSITORY#*/}" \
-            --arg branch "$GITHUB_REF_NAME" \
-            --arg tag "$IMAGE_TAG" \
-            --arg run_url "$RUN_URL" \
-            --arg block "$BLOCK_MODE" \
-            --argjson count "$COUNT" '
-            ($report[0] | [.Results[]?.Vulnerabilities[]?] | unique_by(.VulnerabilityID + "|" + .PkgName)) as $vulns
-            | ($vulns[:10] | map("• `\(.VulnerabilityID)` \(.PkgName) \(.InstalledVersion) → \(.FixedVersion)") | join("\n")) as $list
-            | (if ($vulns | length) > 10 then "\n_… e mais \(($vulns | length) - 10)_" else "" end) as $more
-            | {
-                attachments: [{
-                  color: (if $block == "true" then "#FF0000" else "#FFA500" end),
-                  blocks: [
-                    { type: "section",
-                      text: { type: "mrkdwn", text: (
-                        if $block == "true"
-                        then "❌ *Pipeline bloqueada:* \($count) vulnerabilidade(s) CRITICAL com correção disponível na imagem"
-                        else "⚠️ *Modo aviso:* \($count) vulnerabilidade(s) CRITICAL com correção disponível na imagem. Com o bloqueio ativo, esta pipeline falharia."
-                        end) },
-                      fields: [
-                        { type: "mrkdwn", text: "*Repositório:*\n\($repo)" },
-                        { type: "mrkdwn", text: "*Branch:*\n\($branch)" },
-                        { type: "mrkdwn", text: "*Imagem:*\n\($tag)" }
-                      ] },
-                    { type: "section", text: { type: "mrkdwn", text: ($list + $more) } },
-                    { type: "actions", elements: [
-                      { type: "button", text: { type: "plain_text", text: "Ver CVEs" }, url: $run_url } ] }
-                  ]
-                }]
-              }' > slack-trivy-gate.json
-
-          curl -sS -f -X POST -H 'Content-type: application/json' \
-            --data @slack-trivy-gate.json "$SLACK_WEBHOOK_URL" \
-            || echo "::warning title=Trivy gate::Falha ao enviar o aviso para o Slack."
-
       - name: Upload Image Vulnerability Gate Report
         if: ${{ !cancelled() && steps.trivy_gate.outcome != 'skipped' }}
         uses: actions/upload-artifact@v7
@@ -430,6 +412,18 @@ jobs:
           path: trivy-gate.json
           if-no-files-found: ignore
           retention-days: 90
+
+      # Resumo no Slack (contagem por gravidade, onde corrigir e principais CVEs). Envia sempre, inclusive sem achados.
+      - name: "Notify Slack: Image Vulnerability Report"
+        if: ${{ !cancelled() && steps.trivy_scan.outcome != 'skipped' }}
+        uses: platformbuilders/github-actions-bdsp-templates/scan-report-notify@main
+        with:
+          type: image-vulnerabilities
+          report: trivy-report.json
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          scan_ok: ${{ steps.trivy_scan.outcome == 'success' }}
+          image_tag: ${{ steps.build_push.outputs.IMAGE_TAG }}
+          block_mode: ${{ inputs.trivy_block_critical || vars.TRIVY_BLOCK_CRITICAL == 'true' }}
 
   
       - name: "Notify Slack: Failure (CI)"
