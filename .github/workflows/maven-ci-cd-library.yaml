@@ -159,7 +159,7 @@ jobs:
         run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         env:
           SONAR_HOST_URL: ${{ inputs.SONAR_BDSP_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
@@ -180,7 +180,7 @@ jobs:
             -Dsonar.java.libraries=./lib
 
       - name: SonarQube Quality Gate check
-        uses: sonarsource/sonarqube-quality-gate-action@master
+        uses: sonarsource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_BDSP_TOKEN }}
 

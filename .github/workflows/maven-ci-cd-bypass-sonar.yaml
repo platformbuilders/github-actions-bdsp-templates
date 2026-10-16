@@ -100,8 +100,9 @@ jobs:
           fetch-depth: 0
 
       - name: Run Secret Scanner
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@e76dff8a7e57d6df0c60ad8cbf5d5cba505a8fc9 # v3.99.2
         with:
+          version: "3.99.2"
           base: ${{ github.event.pull_request.base.sha }}
           head: ${{ github.event.pull_request.head.sha }}
           extra_args: >
@@ -112,7 +113,7 @@ jobs:
 
       - name: Install Trufflehog
         run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/e76dff8a7e57d6df0c60ad8cbf5d5cba505a8fc9/scripts/install.sh \
             | sh -s -- -b /usr/local/bin
           trufflehog --version
 
@@ -157,8 +158,9 @@ jobs:
 
        
       - name: Run Image Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: "v0.76.0"
           image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
           format: 'table'
           output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"

@@ -9,3 +9,7 @@ Este repositório contém GitHub Actions customizadas para automação de CI/CD 
 ### Publicação de bibliotecas
 
 📦 [Informações técnicas sobre o pipeline de build e publicação](readmes/README-CI-CD-LIBRARY.md)
+
+### Segurança das actions
+
+📌 [Fixação de actions por SHA e passo a passo de atualização](readmes/README-PINNING-ACTIONS.md)
