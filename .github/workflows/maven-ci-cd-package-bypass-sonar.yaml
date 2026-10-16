@@ -109,8 +109,9 @@ jobs:
           fetch-depth: 0
 
       - name: Run Secret Scanner
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@e76dff8a7e57d6df0c60ad8cbf5d5cba505a8fc9 # v3.99.2
         with:
+          version: "3.99.2"
           extra_args: >
             --log-level=2
 
@@ -231,8 +232,9 @@ jobs:
           DEPLOY_PROVIDER: ${{ env.DEPLOY_PROVIDER }}
 
       - name: Run Image Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: "v0.76.0"
           image-ref: "${{ steps.build_push.outputs.IMAGE_URI }}"
           format: 'table'
           output: "${{ github.event.repository.name }}-${{ steps.build_push.outputs.IMAGE_TAG }}-image-scanner-report.txt"
