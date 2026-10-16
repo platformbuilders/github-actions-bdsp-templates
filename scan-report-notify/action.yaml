@@ -1,0 +1,95 @@
+name: "Scan Report Notification"
+description: "Resume no Slack os relatórios dos scanners da pipeline (vulnerabilidades da imagem e credenciais expostas). Envia sempre: com achados, sem achados ou quando a varredura não foi concluída."
+inputs:
+  type:
+    description: "Tipo de relatório: image-vulnerabilities (JSON do Trivy) ou secrets (JSON do TruffleHog)."
+    required: true
+  report:
+    description: "Caminho do relatório JSON."
+    required: true
+  webhook_url:
+    description: "Webhook do Slack (o mesmo das demais notificações da pipeline)."
+    required: true
+  scan_ok:
+    description: "'true' quando o scanner terminou a varredura. Com 'false', a mensagem avisa que a varredura não foi concluída, em vez de afirmar que nada foi encontrado."
+    required: false
+    default: "true"
+  image_tag:
+    description: "Tag da imagem analisada (apenas para image-vulnerabilities)."
+    required: false
+    default: ""
+  block_mode:
+    description: "'true' quando o gate de vulnerabilidades CRITICAL está em modo bloqueio (apenas para image-vulnerabilities)."
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Send Scan Report to Slack"
+      shell: bash
+      env:
+        REPORT_TYPE: ${{ inputs.type }}
+        REPORT: ${{ inputs.report }}
+        WEBHOOK_URL: ${{ inputs.webhook_url }}
+        SCAN_OK: ${{ inputs.scan_ok }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        BLOCK_MODE: ${{ inputs.block_mode }}
+        REPO: ${{ github.event.repository.name }}
+        BRANCH: ${{ github.ref_name }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        # A notificação é informativa: qualquer problema aqui vira aviso no log e não quebra a pipeline.
+        if [ -z "$WEBHOOK_URL" ]; then
+          echo "::warning title=Scan report::Webhook do Slack não definido; resumo não enviado."
+          exit 0
+        fi
+
+        case "$REPORT_TYPE" in
+          image-vulnerabilities) TITLE="🛡️ *Vulnerabilidades na imagem*" ;;
+          secrets)               TITLE="🔑 *Credenciais expostas no repositório*" ;;
+          *)
+            echo "::error title=Scan report::Tipo de relatório inválido: '$REPORT_TYPE'."
+            exit 1
+            ;;
+        esac
+
+        # O relatório do TruffleHog fica vazio quando não há achados; o do Trivy nunca fica vazio.
+        if [ "$SCAN_OK" != "true" ] || [ ! -f "$REPORT" ] || { [ "$REPORT_TYPE" = "image-vulnerabilities" ] && [ ! -s "$REPORT" ]; }; then
+          SCAN_OK=false
+        fi
+
+        if [ "$SCAN_OK" != "true" ]; then
+          # Nunca afirmar "nada encontrado" quando a varredura não terminou.
+          jq -n --arg title "$TITLE" --arg repo "$REPO" --arg branch "$BRANCH" --arg run_url "$RUN_URL" '{
+            attachments: [{
+              color: "#FFA500",
+              blocks: [
+                { type: "section",
+                  text: { type: "mrkdwn", text: "\($title)\n⚠️ A varredura não foi concluída. Não é possível afirmar que nada foi encontrado." },
+                  fields: [
+                    { type: "mrkdwn", text: "*Repositório:*\n\($repo)" },
+                    { type: "mrkdwn", text: "*Branch:*\n\($branch)" }
+                  ] },
+                { type: "actions", elements: [
+                    { type: "button", text: { type: "plain_text", text: "Ver execução" }, url: $run_url } ] }
+              ]
+            }]
+          }' > scan-report-slack.json
+        elif [ "$REPORT_TYPE" = "image-vulnerabilities" ]; then
+          jq -f "$GITHUB_ACTION_PATH/image-vulnerabilities.jq" \
+            --arg repo "$REPO" --arg branch "$BRANCH" --arg tag "$IMAGE_TAG" \
+            --arg run_url "$RUN_URL" --arg block "$BLOCK_MODE" \
+            "$REPORT" > scan-report-slack.json \
+            || { echo "::warning title=Scan report::Falha ao ler o relatório do Trivy; resumo não enviado."; exit 0; }
+        else
+          jq -n -R -f "$GITHUB_ACTION_PATH/secrets.jq" \
+            --arg repo "$REPO" --arg branch "$BRANCH" --arg run_url "$RUN_URL" \
+            < "$REPORT" > scan-report-slack.json \
+            || { echo "::warning title=Scan report::Falha ao ler o relatório do TruffleHog; resumo não enviado."; exit 0; }
+        fi
+
+        curl -sS -f -X POST -H 'Content-type: application/json' \
+          --data @scan-report-slack.json "$WEBHOOK_URL" \
+          || echo "::warning title=Scan report::Falha ao enviar o resumo para o Slack."
+        rm -f scan-report-slack.json
