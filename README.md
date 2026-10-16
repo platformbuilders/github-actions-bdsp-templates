@@ -10,6 +10,10 @@ Este repositório contém GitHub Actions customizadas para automação de CI/CD 
 
 📦 [Informações técnicas sobre o pipeline de build e publicação](readmes/README-CI-CD-LIBRARY.md)
 
+### Versão do Maven
+
+🧱 [Maven fixado em 3.9.16 por compatibilidade com Quarkus 2.x](readmes/README-MAVEN-VERSION.md)
+
 ### Segurança das actions
 
 📌 [Fixação de actions por SHA e passo a passo de atualização](readmes/README-PINNING-ACTIONS.md)
