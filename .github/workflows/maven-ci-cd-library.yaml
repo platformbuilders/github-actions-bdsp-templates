@@ -61,7 +61,7 @@ env:
 jobs:
 
   Notify_Start:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: "Notify Slack: Start"
         uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
@@ -71,14 +71,14 @@ jobs:
 
   Build_and_Test:
     needs: Notify_Start
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write # Necessário para publicar libs no GitHub Packages
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0

@@ -72,7 +72,7 @@ env:
 jobs:
 
   Notify_Start:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: "Notify Slack: Start"
         uses: platformbuilders/github-actions-bdsp-templates/slack-notify@main
@@ -82,7 +82,7 @@ jobs:
 
   CI:
     needs: [Notify_Start]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       IMAGE_TAG: ${{ steps.build_push.outputs.IMAGE_TAG }}
       IMAGE_DIGEST: ${{ steps.build_push.outputs.IMAGE_DIGEST }}
@@ -91,7 +91,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.git_ref }}
           fetch-depth: 0
@@ -220,7 +220,7 @@ jobs:
 
   CD:
     needs: CI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Kustomize Argo Manifests
         uses: platformbuilders/github-actions-bdsp-templates/kustomize-argo-manifests@main
