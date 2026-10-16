@@ -21,13 +21,18 @@ runs:
         MAVEN_VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
+        if [[ ! "$MAVEN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "::error::Versão do Maven inválida: '${MAVEN_VERSION}'. Use o formato X.Y.Z (ex.: 3.9.16)."
+          exit 1
+        fi
         base="https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}"
         file="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
-        dest="${RUNNER_TEMP}/maven"
-        mkdir -p "$dest"
         curl -sSfL --retry 3 -o "${RUNNER_TEMP}/${file}" "${base}/${file}"
         expected=$(curl -sSfL --retry 3 "${base}/${file}.sha512" | awk '{print $1}')
         echo "${expected}  ${RUNNER_TEMP}/${file}" | sha512sum --check --status
-        tar -xzf "${RUNNER_TEMP}/${file}" -C "$dest"
-        echo "${dest}/apache-maven-${MAVEN_VERSION}/bin" >> "$GITHUB_PATH"
-        "${dest}/apache-maven-${MAVEN_VERSION}/bin/mvn" -v
+        # Extrai em um diretório fixo para que o PATH não dependa do input.
+        rm -rf "${RUNNER_TEMP}/maven"
+        mkdir -p "${RUNNER_TEMP}/maven"
+        tar -xzf "${RUNNER_TEMP}/${file}" -C "${RUNNER_TEMP}/maven" --strip-components=1
+        echo "${RUNNER_TEMP}/maven/bin" >> "$GITHUB_PATH"
+        "${RUNNER_TEMP}/maven/bin/mvn" -v
