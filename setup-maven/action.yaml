@@ -1,0 +1,33 @@
+name: "Setup Maven"
+description: "Instala uma versão fixa do Apache Maven a partir do Maven Central, independente do Maven que vem na imagem do runner."
+# Por que a versão é fixada:
+# A imagem ubuntu-24.04 dos runners do GitHub passou a trazer o Maven 3.10.0 (com o Maven Resolver 2.x),
+# que removeu a classe org.eclipse.aether.spi.locator.ServiceLocator. O quarkus-maven-plugin 2.x depende
+# dela e o build falha em "generate-code". Fixamos o Maven 3.9.x até que todas as aplicações Quarkus 2.x
+# sejam migradas para Quarkus 3.x; depois disso, atualize o default abaixo (e o input maven_version dos
+# workflows maven-ci-cd*). Detalhes em readmes/README-MAVEN-VERSION.md.
+inputs:
+  version:
+    description: "Versão do Apache Maven a ser instalada. Fixada em 3.9.x por compatibilidade com Quarkus 2.x."
+    required: false
+    default: "3.9.16"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Install Apache Maven ${{ inputs.version }}"
+      shell: bash
+      env:
+        MAVEN_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        base="https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}"
+        file="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+        dest="${RUNNER_TEMP}/maven"
+        mkdir -p "$dest"
+        curl -sSfL --retry 3 -o "${RUNNER_TEMP}/${file}" "${base}/${file}"
+        expected=$(curl -sSfL --retry 3 "${base}/${file}.sha512" | awk '{print $1}')
+        echo "${expected}  ${RUNNER_TEMP}/${file}" | sha512sum --check --status
+        tar -xzf "${RUNNER_TEMP}/${file}" -C "$dest"
+        echo "${dest}/apache-maven-${MAVEN_VERSION}/bin" >> "$GITHUB_PATH"
+        "${dest}/apache-maven-${MAVEN_VERSION}/bin/mvn" -v
