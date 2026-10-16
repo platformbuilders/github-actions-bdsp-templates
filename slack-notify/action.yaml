@@ -48,6 +48,9 @@ runs:
         JSON_FILE: ${{ env.json_file }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
+        # Nome completo da branch (ex.: release/1.2.3). O basename do github.ref cortava tudo
+        # antes da última barra e exibia só "1.2.3".
+        BRANCH_NAME: ${{ github.ref_name }}
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_COMMIT_HASH: ${{ github.sha }}
@@ -59,7 +62,6 @@ runs:
         fi
         
         REPO_NAME=$(basename ${{ github.repository }})
-        BRANCH_NAME=$(basename ${{ github.ref }})
         COMMIT_SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
         
         export REPO_NAME
