@@ -46,6 +46,8 @@ Nas bibliotecas, a **falha do scanner interrompe a esteira** em qualquer modo do
 
 O passo **Save Secret Scanner Report** varre o **histórico inteiro** do repositório e considera apenas credenciais **verificadas**, ou seja, que ainda funcionam. A mensagem traz, para cada credencial, o tipo (AWS, Postgres…), o arquivo, a linha e o commit onde ela aparece pela primeira vez, mais o número de outras ocorrências.
 
+**Se a varredura do histórico não terminar, a pipeline para** antes do build: nada segue sem análise. O Slack recebe a mensagem laranja de "varredura não concluída" junto com a notificação de falha, e o `.log` do artifact `*-secret-scanner-report` mostra o motivo. **As credenciais encontradas no histórico não bloqueiam**: elas aparecem só no resumo, porque a correção é rotacionar a credencial, e não um PR.
+
 > 🔒 **A mensagem nunca contém o valor da credencial.** O relatório do TruffleHog traz o valor (`Raw`, `RawV2`) e às vezes um trecho dele (`Redacted`); esses campos são usados só para agrupar ocorrências da mesma credencial e não entram na mensagem.
 
 Remover a credencial do código não basta: ela continua no histórico do Git. A correção é **trocar (rotacionar)** a credencial no sistema de origem.

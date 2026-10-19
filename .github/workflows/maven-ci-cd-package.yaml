@@ -144,19 +144,20 @@ jobs:
           REPORT_LOG="${{ github.event.repository.name }}-secret-scanner-report.log"
 
           # Roda o scan: JSON em stdout -> arquivo; logs/avisos em stderr -> .log
-          # Não bloqueia a pipeline: só registra se a varredura terminou, para o resumo no Slack
-          # não afirmar "nada encontrado" quando o scan falhou.
-          if trufflehog git file://. \
+          # Requisito de segurança: se a varredura não terminar, a pipeline para (nada segue sem
+          # análise). Credenciais encontradas no histórico NÃO bloqueiam: sem --fail, o TruffleHog
+          # sai com 0 mesmo com achados, que vão para o resumo no Slack.
+          if ! trufflehog git file://. \
             --only-verified \
             --json \
             > "$REPORT_JSON" 2> "$REPORT_LOG"; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning title=Secret scanner::A varredura do histórico não foi concluída; veja o .log no artifact."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::error title=Secret scanner::A varredura do histórico não foi concluída; veja o .log no artifact."
+            exit 1
           fi
 
+      # Sobe o relatório também quando a varredura falhou: o .log mostra o motivo.
       - name: Upload Secret Scanner Report
+        if: ${{ !cancelled() && steps.secret_report.outcome != 'skipped' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ github.event.repository.name }}-secret-scanner-report
@@ -168,12 +169,13 @@ jobs:
       # Resumo no Slack das credenciais VÁLIDAS encontradas no histórico. Envia sempre, inclusive sem achados.
       # Nunca envia o valor da credencial.
       - name: "Notify Slack: Secret Scanner Report"
+        if: ${{ !cancelled() && steps.secret_report.outcome != 'skipped' }}
         uses: platformbuilders/github-actions-bdsp-templates/scan-report-notify@main
         with:
           type: secrets
           report: ${{ github.event.repository.name }}-secret-scanner-report.json
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          scan_ok: ${{ steps.secret_report.outputs.ok == 'true' }}
+          scan_ok: ${{ steps.secret_report.outcome == 'success' }}
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
