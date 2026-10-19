@@ -1,8 +1,8 @@
 name: "Scan Report Notification"
-description: "Resume no Slack os relatórios dos scanners da pipeline (vulnerabilidades da imagem e credenciais expostas). Envia sempre: com achados, sem achados ou quando a varredura não foi concluída."
+description: "Resume no Slack os relatórios dos scanners da pipeline (vulnerabilidades da imagem ou das dependências e credenciais expostas). Envia sempre: com achados, sem achados ou quando a varredura não foi concluída."
 inputs:
   type:
-    description: "Tipo de relatório: image-vulnerabilities (JSON do Trivy) ou secrets (JSON do TruffleHog)."
+    description: "Tipo de relatório: image-vulnerabilities (JSON do trivy image), dependency-vulnerabilities (JSON do trivy fs, usado nas bibliotecas) ou secrets (JSON do TruffleHog)."
     required: true
   report:
     description: "Caminho do relatório JSON."
@@ -18,8 +18,12 @@ inputs:
     description: "Tag da imagem analisada (apenas para image-vulnerabilities)."
     required: false
     default: ""
+  version:
+    description: "Versão do artefato analisado (apenas para dependency-vulnerabilities)."
+    required: false
+    default: ""
   block_mode:
-    description: "'true' quando o gate de vulnerabilidades CRITICAL está em modo bloqueio (apenas para image-vulnerabilities)."
+    description: "'true' quando o gate de vulnerabilidades CRITICAL está em modo bloqueio (image-vulnerabilities e dependency-vulnerabilities)."
     required: false
     default: "false"
 
@@ -34,6 +38,7 @@ runs:
         WEBHOOK_URL: ${{ inputs.webhook_url }}
         SCAN_OK: ${{ inputs.scan_ok }}
         IMAGE_TAG: ${{ inputs.image_tag }}
+        VERSION: ${{ inputs.version }}
         BLOCK_MODE: ${{ inputs.block_mode }}
         REPO: ${{ github.event.repository.name }}
         BRANCH: ${{ github.ref_name }}
@@ -46,8 +51,9 @@ runs:
         fi
 
         case "$REPORT_TYPE" in
-          image-vulnerabilities) TITLE="🛡️ *Vulnerabilidades na imagem*" ;;
-          secrets)               TITLE="🔑 *Credenciais expostas no repositório*" ;;
+          image-vulnerabilities)      TITLE="🛡️ *Vulnerabilidades na imagem*" ;;
+          dependency-vulnerabilities) TITLE="📦 *Vulnerabilidades nas dependências*" ;;
+          secrets)                    TITLE="🔑 *Credenciais expostas no repositório*" ;;
           *)
             echo "::error title=Scan report::Tipo de relatório inválido: '$REPORT_TYPE'."
             exit 1
@@ -55,7 +61,7 @@ runs:
         esac
 
         # O relatório do TruffleHog fica vazio quando não há achados; o do Trivy nunca fica vazio.
-        if [ "$SCAN_OK" != "true" ] || [ ! -f "$REPORT" ] || { [ "$REPORT_TYPE" = "image-vulnerabilities" ] && [ ! -s "$REPORT" ]; }; then
+        if [ "$SCAN_OK" != "true" ] || [ ! -f "$REPORT" ] || { [ "$REPORT_TYPE" != "secrets" ] && [ ! -s "$REPORT" ]; }; then
           SCAN_OK=false
         fi
 
@@ -76,10 +82,16 @@ runs:
               ]
             }]
           }' > scan-report-slack.json
-        elif [ "$REPORT_TYPE" = "image-vulnerabilities" ]; then
+        elif [ "$REPORT_TYPE" != "secrets" ]; then
+          # O mesmo script atende os dois relatórios do Trivy; kind muda título, rótulos e "onde corrigir".
+          if [ "$REPORT_TYPE" = "dependency-vulnerabilities" ]; then
+            KIND=dependencies; REF="$VERSION"
+          else
+            KIND=image; REF="$IMAGE_TAG"
+          fi
           jq -f "$GITHUB_ACTION_PATH/image-vulnerabilities.jq" \
-            --arg repo "$REPO" --arg branch "$BRANCH" --arg tag "$IMAGE_TAG" \
-            --arg run_url "$RUN_URL" --arg block "$BLOCK_MODE" \
+            --arg repo "$REPO" --arg branch "$BRANCH" --arg tag "$REF" \
+            --arg run_url "$RUN_URL" --arg block "$BLOCK_MODE" --arg kind "$KIND" \
             "$REPORT" > scan-report-slack.json \
             || { echo "::warning title=Scan report::Falha ao ler o relatório do Trivy; resumo não enviado."; exit 0; }
         else

@@ -4,6 +4,8 @@ Este documento explica como os templates usam o [Trivy](https://github.com/aquas
 
 Templates que usam o Trivy: `maven-ci-cd`, `maven-ci-cd-package`, `maven-ci-cd-package-non-kustomize`, `maven-ci-cd-bypass-sonar`, `maven-ci-cd-package-bypass-sonar`, `front-ci-cd`, `front-ci-cd-v2`, `front-ci-cd-no-cache` e `front-ci-cd-no-cache-no-sonar`.
 
+> Bibliotecas (`maven-ci-cd-library`) não geram imagem: o Trivy analisa os `pom.xml`, com o mesmo gate de CRITICAL, o mesmo input `trivy_block_critical` e a mesma variável `TRIVY_BLOCK_CRITICAL` descritos abaixo. Ver [README-CI-CD-LIBRARY](README-CI-CD-LIBRARY.md#-varredura-de-dependências-trivy).
+
 ---
 
 ## 🔎 O que roda no job de CI
@@ -18,7 +20,7 @@ Depois do build e push da imagem, estes steps rodam em sequência:
 | **Image Vulnerability Gate (CRITICAL)** | procura vulnerabilidades `CRITICAL` **que já têm correção** (`ignore-unfixed`) | só em modo bloqueio |
 | **Image Vulnerability Gate Summary** | escreve no resumo do run a tabela de CVEs (pacote, versão instalada e versão corrigida) | — |
 | **Upload Image Vulnerability Gate Report** | publica o JSON do gate como artifact `<repo>-<tag>-image-vulnerability-gate`, com **90 dias** de retenção | — |
-| **Notify Slack: Image Vulnerability Report** | envia o resumo do relatório para o Slack, se houver achados (ver [Aviso no Slack](#-aviso-no-slack)) | — |
+| **Notify Slack: Image Vulnerability Report** | envia o resumo do relatório para o Slack a cada execução, inclusive sem achados (ver [Aviso no Slack](#-aviso-no-slack)) | — |
 
 O gate considera apenas o que é **CRITICAL e tem versão corrigida disponível**. CVEs sem correção não bloqueiam, porque o time não teria como resolver. Elas continuam aparecendo no relatório em tabela.
 
@@ -131,7 +133,7 @@ while read -r repo; do
 done
 ```
 
-A tabela com as CVEs de cada caso fica no **resumo do run** (aba *Summary*), e o JSON fica no artifact `*-image-vulnerability-gate`.
+A tabela com as CVEs de cada caso fica no **resumo do run** (aba *Summary*), e o JSON fica no artifact `*-image-vulnerability-gate` (ou `*-dependency-vulnerability-gate`, nas bibliotecas).
 
 ---
 
