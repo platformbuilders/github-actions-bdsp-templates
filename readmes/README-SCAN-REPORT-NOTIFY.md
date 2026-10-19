@@ -5,6 +5,7 @@ A action [`scan-report-notify`](../scan-report-notify/action.yaml) transforma os
 | Relatório | Scanner | Templates |
 |---|---|---|
 | Vulnerabilidades da imagem (`CRITICAL` e `HIGH`) | Trivy | `maven-ci-cd`, `maven-ci-cd-package`, `maven-ci-cd-package-non-kustomize`, `maven-ci-cd-bypass-sonar`, `maven-ci-cd-package-bypass-sonar`, `front-ci-cd`, `front-ci-cd-v2`, `front-ci-cd-no-cache`, `front-ci-cd-no-cache-no-sonar` |
+| Vulnerabilidades das dependências (`CRITICAL` e `HIGH`), para bibliotecas sem imagem | Trivy (`trivy fs`) | `maven-ci-cd-library` |
 | Credenciais válidas no histórico do Git | TruffleHog | `maven-ci-cd`, `maven-ci-cd-package`, `maven-ci-cd-bypass-sonar` |
 
 ---
@@ -16,7 +17,7 @@ A action [`scan-report-notify`](../scan-report-notify/action.yaml) transforma os
 | Situação | Cor | Mensagem |
 |---|---|---|
 | Há achados | 🔴 vermelha ou 🟠 laranja | contagem, principais itens e botão para a execução |
-| Varredura concluída, nada encontrado | 🟢 verde | "Nenhuma vulnerabilidade crítica ou alta encontrada" / "Nenhuma credencial válida encontrada" |
+| Varredura concluída, nada encontrado | 🟢 verde | "Nenhuma vulnerabilidade crítica ou alta encontrada" (imagem ou dependências) / "Nenhuma credencial válida encontrada" |
 | O scanner não terminou | 🟠 laranja | "A varredura não foi concluída", **nunca** "nada encontrado" |
 
 A notificação é informativa: se o envio falhar, a pipeline **não** falha; aparece só um *warning* no log.
@@ -31,6 +32,15 @@ A notificação é informativa: se o envio falhar, a pipeline **não** falha; ap
 - o aviso do gate de CRITICAL (modo aviso ou bloqueio), quando se aplica. Ver [README-TRIVY](README-TRIVY.md).
 
 Vermelha quando há crítica com correção; laranja quando há só altas ou críticas sem correção.
+
+## 📦 Vulnerabilidades das dependências (Trivy, bibliotecas)
+
+Mesma mensagem da imagem, inclusive o aviso do gate de CRITICAL (modo aviso ou bloqueio), com duas diferenças:
+
+- o campo **Versão** (versão do `pom.xml`) no lugar de **Imagem**;
+- **onde corrigir** aponta o `pom.xml` de cada módulo com achados (até 6, os com mais críticas primeiro), já que não existe imagem base.
+
+Nas bibliotecas, a **falha do scanner interrompe a esteira** em qualquer modo do gate, e a mensagem laranja de "varredura não concluída" vem junto da notificação de falha.
 
 ## 🔑 Credenciais expostas (TruffleHog)
 
@@ -52,6 +62,12 @@ Os scripts `jq` ficam na pasta da action e podem ser testados com um relatório 
 jq -f scan-report-notify/image-vulnerabilities.jq \
   --arg repo meu-servico --arg branch release/1.0.0 --arg tag abc1234 \
   --arg run_url https://exemplo --arg block false \
+  trivy-report.json
+
+# Relatório de dependências (bibliotecas): mesmo script, com --arg kind dependencies e a versão em $tag
+jq -f scan-report-notify/image-vulnerabilities.jq \
+  --arg repo minha-lib --arg branch master --arg tag 1.2.0 \
+  --arg run_url https://exemplo --arg block false --arg kind dependencies \
   trivy-report.json
 
 jq -n -R -f scan-report-notify/secrets.jq \

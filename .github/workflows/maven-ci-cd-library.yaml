@@ -43,6 +43,21 @@ on:
         description: 'Diretório onde foi gerado o relatório de cobertura de testes. Ex: target/site/jacoco/jacoco.xml'
         required: false
         type: string
+      trivy_skip_dirs:
+        description: 'Diretórios fora do scan de dependências, separados por vírgula (ex.: módulos de exemplo que não são publicados). target e lib já ficam de fora.'
+        required: false
+        default: ''
+        type: string
+      trivy_skip_files:
+        description: 'Arquivos fora do scan de dependências, separados por vírgula. Em projeto multimódulo, use pom.xml: o alvo do pom raiz soma as dependências de todos os módulos, inclusive os listados em trivy_skip_dirs, e cada módulo já é analisado no próprio pom.xml.'
+        required: false
+        default: ''
+        type: string
+      trivy_block_critical:
+        description: 'Bloqueia a pipeline se alguma dependência tiver vulnerabilidade CRITICAL com correção disponível. Padrão: apenas aviso (ver readmes/README-TRIVY.md)'
+        required: false
+        default: false
+        type: boolean
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -107,6 +122,137 @@ jobs:
         run: |
           mvn clean package dependency:copy-dependencies -DoutputDirectory=./lib
 
+      - name: Get project version
+        if: ${{ !cancelled() }}
+        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      # --- Scan de vulnerabilidades das dependências (Trivy) ---
+      # A biblioteca não gera imagem: o Trivy lê os pom.xml (trivy fs). Roda depois do build para
+      # resolver as dependências transitivas pelo ~/.m2 já preenchido. target e lib ficam de fora
+      # porque lib traz os jars do copy-dependencies, inclusive os de teste.
+      # Requisito de segurança: se o scanner falhar, a pipeline para e nada é publicado sem análise
+      # (o Slack recebe o aviso de "varredura não concluída" e a notificação de falha), em qualquer
+      # modo do gate abaixo. Exceções ficam no .trivyignore da raiz do repositório.
+      - name: Run Dependency Vulnerability Scanner
+        id: trivy_scan
+        if: ${{ !cancelled() }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: "v0.76.0"
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          skip-dirs: ${{ format('**/target,**/lib{0}{1}', inputs.trivy_skip_dirs != '' && ',' || '', inputs.trivy_skip_dirs) }}
+          skip-files: ${{ inputs.trivy_skip_files }}
+          format: 'json'
+          output: 'trivy-report.json'
+          exit-code: '0'
+          severity: "CRITICAL,HIGH"
+
+      - name: Convert Dependency Vulnerability Report to table
+        if: ${{ !cancelled() && steps.trivy_scan.outcome == 'success' }}
+        env:
+          REPORT_TXT: "${{ github.event.repository.name }}-${{ env.PROJECT_VERSION }}-dependency-scanner-report.txt"
+        run: trivy convert --format table --output "$REPORT_TXT" trivy-report.json
+
+      - name: Upload Dependency Vulnerability Scanner Report
+        if: ${{ !cancelled() && steps.trivy_scan.outcome == 'success' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}-${{ env.PROJECT_VERSION }}-dependency-scanner-report
+          path: |
+            ${{ github.event.repository.name }}-${{ env.PROJECT_VERSION }}-dependency-scanner-report.txt
+            trivy-report.json
+          retention-days: 7
+
+      # Gate de vulnerabilidades: CRITICAL com correção disponível (ignore-unfixed), como nos serviços.
+      # Modo aviso por padrão; bloqueia com o input trivy_block_critical ou a variável TRIVY_BLOCK_CRITICAL=true.
+      # Só roda se o scan principal terminou: falha do scanner já interrompeu a pipeline acima.
+      - name: Dependency Vulnerability Gate (CRITICAL)
+        id: trivy_gate
+        if: ${{ steps.trivy_scan.outcome == 'success' }}
+        continue-on-error: ${{ !(inputs.trivy_block_critical || vars.TRIVY_BLOCK_CRITICAL == 'true') }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: "v0.76.0"
+          skip-setup-trivy: true
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          skip-dirs: ${{ format('**/target,**/lib{0}{1}', inputs.trivy_skip_dirs != '' && ',' || '', inputs.trivy_skip_dirs) }}
+          skip-files: ${{ inputs.trivy_skip_files }}
+          format: 'json'
+          output: 'trivy-gate.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+
+      # Mesmos títulos de anotação dos serviços: o script de medição do README-TRIVY conta as bibliotecas junto.
+      - name: Dependency Vulnerability Gate Summary
+        if: ${{ !cancelled() && steps.trivy_gate.outcome != 'skipped' }}
+        env:
+          GATE_OUTCOME: ${{ steps.trivy_gate.outcome }}
+          BLOCK_MODE: ${{ inputs.trivy_block_critical || vars.TRIVY_BLOCK_CRITICAL == 'true' }}
+        run: |
+          REPORT="trivy-gate.json"
+          if [ ! -s "$REPORT" ]; then
+            echo "::warning title=Trivy gate::Relatório do gate não foi gerado (resultado do scan: $GATE_OUTCOME)."
+            exit 0
+          fi
+
+          COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | .VulnerabilityID + "|" + .PkgName] | unique | length' "$REPORT")
+
+          {
+            echo "### 📦 Trivy: dependências com vulnerabilidade CRITICAL e correção disponível"
+            echo
+            if [ "$COUNT" -eq 0 ]; then
+              echo "✅ Nenhuma encontrada."
+            else
+              if [ "$BLOCK_MODE" = "true" ]; then
+                echo "❌ **Modo bloqueio:** $COUNT encontrada(s). A pipeline foi interrompida."
+              else
+                echo "⚠️ **Modo aviso:** $COUNT encontrada(s). Com o bloqueio ativo, esta pipeline falharia."
+              fi
+              echo
+              echo "| CVE | Dependência | Versão instalada | Versão corrigida | pom.xml |"
+              echo "|---|---|---|---|---|"
+              jq -r '[.Results[]? as $r | $r.Vulnerabilities[]? | . + {Target: $r.Target}] | unique_by(.VulnerabilityID + "|" + .PkgName + "|" + .Target) | .[]
+                | "| \(if .PrimaryURL then "[\(.VulnerabilityID)](\(.PrimaryURL))" else .VulnerabilityID end) | \(.PkgName) | \(.InstalledVersion) | \(.FixedVersion) | \(.Target) |"' "$REPORT"
+              echo
+              echo "O relatório completo (JSON) fica no artifact \`*-dependency-vulnerability-gate\` por 90 dias."
+              echo "Para registrar uma exceção justificada, use o \`.trivyignore\` (veja readmes/README-TRIVY.md no repositório de templates)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [ "$COUNT" -eq 0 ] && exit 0
+
+          if [ "$BLOCK_MODE" = "true" ]; then
+            echo "::error title=Trivy gate::$COUNT vulnerabilidade(s) CRITICAL com correção disponível nas dependências. Pipeline bloqueada."
+          else
+            echo "::warning title=Trivy gate (modo aviso)::$COUNT vulnerabilidade(s) CRITICAL com correção disponível nas dependências. Com o bloqueio ativo, esta pipeline falharia."
+          fi
+
+      - name: Upload Dependency Vulnerability Gate Report
+        if: ${{ !cancelled() && steps.trivy_gate.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}-${{ env.PROJECT_VERSION }}-dependency-vulnerability-gate
+          path: trivy-gate.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      # Resumo no Slack (contagem por gravidade, pom.xml onde corrigir e principais CVEs). Envia sempre, inclusive sem achados.
+      - name: "Notify Slack: Dependency Vulnerability Report"
+        if: ${{ !cancelled() && steps.trivy_scan.outcome != 'skipped' }}
+        uses: platformbuilders/github-actions-bdsp-templates/scan-report-notify@main
+        with:
+          type: dependency-vulnerabilities
+          report: trivy-report.json
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          scan_ok: ${{ steps.trivy_scan.outcome == 'success' }}
+          version: ${{ env.PROJECT_VERSION }}
+          block_mode: ${{ inputs.trivy_block_critical || vars.TRIVY_BLOCK_CRITICAL == 'true' }}
+
       # --- Bloco de Governança do SonarQube ---
       - name: Check project existence in SonarQube
         id: checkSonarProjectExistence
@@ -166,9 +312,6 @@ jobs:
           --header 'Content-Type: application/x-www-form-urlencoded' \
           --data-urlencode 'projectKey=${{ github.event.repository.name }}' \
           --data-urlencode 'templateName=${{env.SONAR_PERMISSION_TEMPLATE}}'
-
-      - name: Get project version
-        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
